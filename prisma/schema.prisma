@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,19 +8,201 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          String    @default("client") // "admin" | "client"
+  isActive      Boolean   @default(true)
+  clientId      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  client        Client?
 }
 
-model Post {
+model Client {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  name            String
+  age             Int?
+  height          Float?
+  weight          Float?
+  goal            String?
+  experienceLevel String?
+  injuries        String?
+  weeklyAvailability String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  measurements    Measurement[]
+  progressPhotos  ProgressPhoto[]
+  trainings       Training[]
+  sessions        Session[]
+  questionnaires  Questionnaire[]
+  trainerNotes    TrainerNote[]
+}
+
+model Measurement {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  clientId  String
+  date      DateTime @default(now())
+  weight    Float?
+  chest     Float?
+  waist     Float?
+  hips      Float?
+  arm       Float?
+  thigh     Float?
+  shoulder  Float?
+  calf      Float?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ProgressPhoto {
+  id        String   @id @default(cuid())
+  clientId  String
+  date      DateTime @default(now())
+  url       String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  name        String
+  muscleGroup String?
+  equipment   String?
+  technique   String?
+  videoUrl    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trainingExercises TrainingExercise[]
+}
+
+model Training {
+  id          String   @id @default(cuid())
+  clientId    String
+  name        String
+  mesocycle   Int?
+  week        Int?
+  startDate   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  days        TrainingDay[]
+  sessions    Session[]
+}
+
+model TrainingDay {
+  id         String   @id @default(cuid())
+  trainingId String
+  dayNumber  Int
+  dayName    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  training   Training  @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  exercises  TrainingExercise[]
+}
+
+model TrainingExercise {
+  id         String   @id @default(cuid())
+  dayId      String
+  exerciseId String?
+  exerciseName String
+  order      Int      @default(0)
+  prescribedSets   Int?
+  prescribedReps   String?
+  prescribedRir    String?
+  prescribedRpe    Float?
+  prescribedRest   Int?
+  prescribedTempo  String?
+  prescribedWeight Float?
+  notes       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  day        TrainingDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exercise   Exercise?    @relation(fields: [exerciseId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  clientId  String
+  trainingId String?
+  dayNumber Int?
+  date      DateTime @default(now())
+  notes     String?
+  rpe       Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  training  Training? @relation(fields: [trainingId], references: [id])
+  exercises SessionExercise[]
+}
+
+model SessionExercise {
+  id        String   @id @default(cuid())
+  sessionId String
+  exerciseName String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sets      SessionSet[]
+}
+
+model SessionSet {
+  id          String  @id @default(cuid())
+  exerciseId  String
+  setNumber   Int
+  reps        Int?
+  weight      Float?
+  rir         Int?
+  rpe         Float?
+  createdAt   DateTime @default(now())
+
+  exercise    SessionExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+}
+
+model Questionnaire {
+  id              String   @id @default(cuid())
+  clientId        String
+  date            DateTime @default(now())
+  sleepQuality    Int?
+  fatigue         Int?
+  stress          Int?
+  motivation      Int?
+  pain            Int?
+  energy          Int?
+  hunger          Int?
+  adherence       Int?
+  trainingFeeling Int?
+  overallScore    Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model TrainerNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }

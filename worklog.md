@@ -22,3 +22,65 @@ Stage Summary:
 - Sheets: DASHBOARD (33 rows), REGISTRO SEMANAL (92 rows, 106 formulas), EVOLUCIÓN (78 rows, 3 charts), LISTAS (11 rows)
 - All 29 exercises and 42 series preserved from original
 - Paleta: bottega (dark green #2D4A3E - premium/minimalist)
+
+---
+Task ID: 3
+Agent: Backend API Agent
+Task: Create all backend API routes for A-THERAPY personal trainer web application
+
+Work Log:
+- Created 14 API route files covering all data models in the Prisma schema
+- Auth routes: login (POST with JWT token response), seed (POST admin user creation, idempotent)
+- Clients routes: GET all with computed status (green/yellow/red), search filter, POST create with user+client nested creation
+- Client [id] routes: GET with all related data (trainings, sessions, measurements, questionnaires, trainer notes), PUT update, DELETE cascade
+- Exercises routes: GET all with muscleGroup filter (both admin and client access), POST create (admin only)
+- Exercise [id] routes: PUT update, DELETE (admin only)
+- Trainings routes: GET by clientId, POST with nested days > exercises structure using Prisma nested create
+- Training [id] routes: GET with nested days > exercises, PUT with full day replacement, DELETE, duplicate via ?duplicate=true query param
+- Sessions routes: GET by clientId with volume computation, POST with nested exercises > sets structure
+- Session [id] routes: PUT with exercise/sets replacement, DELETE with ownership check
+- Questionnaires routes: GET by clientId, POST with automatic overallScore computation (average of 9 non-null numeric fields)
+- Measurements routes: GET by clientId, POST create
+- Users routes: GET all (admin only), POST create with password hashing
+- User [id] routes: PUT update with optional password change, DELETE deactivation (sets isActive=false)
+
+Stage Summary:
+- 14 route files created in src/app/api/
+- All routes use getUserFromRequest() for auth, return 401 if unauthenticated
+- Admin-only routes check role === 'admin', return 403 if unauthorized
+- Volume calculation: sum of (reps * weight) per exercise and per session
+- Client status: green (score >= 70 && session <= 7d), yellow (score 40-70 || session 7-14d), red (score < 40 || session > 14d)
+- Questionnaire overallScore: average of sleepQuality, fatigue, stress, motivation, pain, energy, hunger, adherence, trainingFeeling
+- Training duplication via ?duplicate=true query param on GET
+- ESLint passes with zero errors
+- Dev server compiles all routes successfully
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Build complete A-THERAPY web platform (frontend + backend)
+
+Work Log:
+- Designed Prisma schema with 13 models (User, Client, Exercise, Training, TrainingDay, TrainingExercise, Session, SessionExercise, SessionSet, Questionnaire, Measurement, ProgressPhoto, TrainerNote)
+- Created JWT authentication system with admin/client roles
+- Built 14 API routes: auth/login, auth/seed, clients CRUD, exercises CRUD, trainings CRUD with duplicate, sessions CRUD with volume calc, questionnaires with auto-score, measurements, users management
+- Applied A-THERAPY Bottega dark green (#2D4A3E) brand identity across all UI
+- Built Zustand store for SPA client-side routing
+- Built LoginForm, Sidebar, AppShell layout components
+- Built DashboardView with KPI cards, pie chart, client list
+- Built ClientList with search, status badges, create dialog
+- Built ClientDetail with 5 tabs (Profile, Training, Sessions, Questionnaire, Progress)
+- Built ExerciseLibrary with muscle group filtering
+- Built AdminPanel with user management
+- Replaced Radix Tabs with custom button tabs (React 19 compatibility fix)
+- Fixed all React 19 strict lint issues (setState in effects)
+- Verified: login, dashboard, client creation, client detail, tab navigation all work
+
+Stage Summary:
+- Complete SPA platform at / route with client-side routing
+- Login: admin@atherapy.com / admin123
+- 5 main views: Dashboard, Clientes, Ejercicios, Administración + Client Detail (5 tabs)
+- Session volume auto-calculation (reps × weight)
+- Questionnaire auto-scoring (average of 9 fields)
+- Client status computation (green/yellow/red based on questionnaire + session recency)
+- Charts with recharts (weight evolution, volume, questionnaire trend)
