@@ -18,6 +18,14 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     const body = await req.json()
     const { email, name, role, isActive, password } = body
 
+    // Check email uniqueness if changing email
+    if (email) {
+      const existing = await db.user.findFirst({ where: { email, NOT: { id } } })
+      if (existing) {
+        return Response.json({ error: 'El email ya está en uso' }, { status: 409 })
+      }
+    }
+
     const data: Record<string, unknown> = {}
     if (email !== undefined) data.email = email
     if (name !== undefined) data.name = name
@@ -75,7 +83,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       },
     })
 
-    return Response.json({ user, message: 'User deactivated successfully' })
+    return Response.json({ user, message: 'Usuario desactivado correctamente' })
   } catch (error) {
     console.error('DELETE user error:', error)
     return Response.json({ error: 'Internal server error' }, { status: 500 })

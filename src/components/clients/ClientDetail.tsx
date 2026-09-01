@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   ArrowLeft, Plus, Trash2, Copy, Calendar, FileText, Activity,
   ClipboardList, Save, Loader2, ChevronDown, ChevronUp, BarChart3, Edit3,
+  KeyRound, Mail, ShieldCheck, ShieldX,
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -163,6 +164,13 @@ export default function ClientDetail({ clientId }: Props) {
   const [showMeasurement, setShowMeasurement] = useState(false)
   const [measForm, setMeasForm] = useState<Record<string, string>>({})
 
+  // Credential editing state (admin only)
+  const [editCredentials, setEditCredentials] = useState(false)
+  const [credForm, setCredForm] = useState({ email: '', password: '' })
+  const [savingCreds, setSavingCreds] = useState(false)
+  const [credError, setCredError] = useState('')
+  const [credSuccess, setCredSuccess] = useState('')
+
   useEffect(() => {
     let cancelled = false
     apiGet(`/api/clients/${clientId}`).then((data) => {
@@ -204,6 +212,41 @@ export default function ClientDetail({ clientId }: Props) {
         })
       }
     }).catch(() => {})
+  }
+
+  const saveCredentials = async () => {
+    if (!client?.user?.id) return
+    setCredError('')
+    setCredSuccess('')
+    setSavingCreds(true)
+    try {
+      const payload: Record<string, string> = {}
+      if (credForm.email && credForm.email !== client.user.email) {
+        payload.email = credForm.email
+      }
+      if (credForm.password) {
+        payload.password = credForm.password
+      }
+      if (Object.keys(payload).length === 0) {
+        setCredError('No hay cambios que guardar')
+        setSavingCreds(false)
+        return
+      }
+      await apiPut(`/api/users/${client.user.id}`, payload)
+      setCredSuccess('Acceso actualizado correctamente')
+      setEditCredentials(false)
+      setCredForm({ email: '', password: '' })
+      reloadClient()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error al guardar'
+      if (msg.includes('409') || msg.includes('email')) {
+        setCredError('El email ya está en uso')
+      } else {
+        setCredError('Error al guardar los cambios')
+      }
+    } finally {
+      setSavingCreds(false)
+    }
   }
 
   const saveProfile = async () => {
@@ -559,6 +602,60 @@ export default function ClientDetail({ clientId }: Props) {
                 )}
               </CardContent>
             </Card>
+
+            {/* ACCESS CARD — admin only */}
+            {isAdmin && client?.user && (
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                      <KeyRound className="h-3.5 w-3.5" /> Acceso del cliente
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      {client.user.isActive ? (
+                        <Badge className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><ShieldCheck className="h-3 w-3 mr-1" />Activo</Badge>
+                      ) : (
+                        <Badge variant="destructive" className="text-[10px]"><ShieldX className="h-3 w-3 mr-1" />Inactivo</Badge>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => { setEditCredentials(!editCredentials); setCredError(''); setCredSuccess(''); setCredForm({ email: client.user.email, password: '' }) }}>
+                        <Edit3 className="h-3.5 w-3.5 mr-1" /> {editCredentials ? 'Cancelar' : 'Editar'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {credSuccess && <p className="text-xs text-emerald-600 mb-3">{credSuccess}</p>}
+                  {credError && <p className="text-xs text-red-500 mb-3">{credError}</p>}
+                  {editCredentials ? (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs uppercase flex items-center gap-1.5"><Mail className="h-3 w-3" /> Email</Label>
+                        <Input value={credForm.email} onChange={(e) => setCredForm(f => ({...f, email: e.target.value}))} type="email" className="mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs uppercase flex items-center gap-1.5"><KeyRound className="h-3 w-3" /> Nueva contraseña <span className="text-muted-foreground normal-case">(dejar vacío para no cambiar)</span></Label>
+                        <Input value={credForm.password} onChange={(e) => setCredForm(f => ({...f, password: e.target.value}))} type="password" className="mt-1" placeholder="••••••••" />
+                      </div>
+                      <Button onClick={saveCredentials} disabled={savingCreds} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white w-full">
+                        {savingCreds ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                        Guardar acceso
+                      </Button>
+                    </div>
+                  ) : (
+                    <dl className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <dt className="text-muted-foreground flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email</dt>
+                        <dd className="font-medium">{client.user.email}</dd>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <dt className="text-muted-foreground flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> Contraseña</dt>
+                        <dd className="font-medium text-muted-foreground">••••••••</dd>
+                      </div>
+                    </dl>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="space-y-6">
               {/* Latest questionnaire score */}

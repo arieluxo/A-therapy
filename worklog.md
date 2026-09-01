@@ -84,3 +84,27 @@ Stage Summary:
 - Questionnaire auto-scoring (average of 9 fields)
 - Client status computation (green/yellow/red based on questionnaire + session recency)
 - Charts with recharts (weight evolution, volume, questionnaire trend)
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: Add email/password editing in client profile (admin only) + improve admin access management
+
+Work Log:
+- Added "Acceso del cliente" card to ClientDetail Profile tab (admin-only visibility)
+- Card shows: email, masked password, active/inactive status badge
+- Edit mode allows changing email and/or password with validation
+- Updated users API POST to auto-create Client record when role="client"
+- Updated users API GET to include linked client name
+- Updated users/[id] PUT to check email uniqueness before update
+- Updated AdminPanel with KPI cards (total, clients, active), better user list showing linked profiles
+- Added error/success feedback messages with proper error propagation
+- Improved api.ts to throw structured errors on non-OK responses
+- Added info card explaining how access creation works
+
+Stage Summary:
+- Admin can edit email/password directly from client profile or from Administration panel
+- Only admin sees access management (credentials card + admin panel)
+- Creating a client user auto-creates the Client profile
+- Email uniqueness enforced on both create and edit
+- Verified end-to-end: login, edit email from client profile, success message, admin panel shows linked profiles
