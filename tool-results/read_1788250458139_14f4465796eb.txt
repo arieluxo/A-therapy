@@ -1,0 +1,1017 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState } from 'react'
+     4→import { useStore } from '@/store/useStore'
+     5→import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api'
+     6→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     7→import { Button } from '@/components/ui/button'
+     8→import { Input } from '@/components/ui/input'
+     9→import { Label } from '@/components/ui/label'
+    10→import { Badge } from '@/components/ui/badge'
+    11→
+    12→import { Textarea } from '@/components/ui/textarea'
+    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    14→import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+    15→import { Slider } from '@/components/ui/slider'
+    16→import { Progress } from '@/components/ui/progress'
+    17→import { Separator } from '@/components/ui/separator'
+    18→import { ScrollArea } from '@/components/ui/scroll-area'
+    19→import {
+    20→  ArrowLeft, Plus, Trash2, Copy, Calendar, FileText, Activity,
+    21→  ClipboardList, Save, Loader2, ChevronDown, ChevronUp, BarChart3, Edit3,
+    22→} from 'lucide-react'
+    23→import {
+    24→  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    25→} from 'recharts'
+    26→
+    27→interface Props {
+    28→  clientId: string
+    29→}
+    30→
+    31→interface TrainingExercise {
+    32→  id?: string
+    33→  exerciseName: string
+    34→  exerciseId?: string
+    35→  order: number
+    36→  prescribedSets?: number
+    37→  prescribedReps?: string
+    38→  prescribedRir?: string
+    39→  prescribedRpe?: number
+    40→  prescribedRest?: number
+    41→  prescribedTempo?: string
+    42→  prescribedWeight?: number
+    43→  notes?: string
+    44→}
+    45→
+    46→interface TrainingDay {
+    47→  id?: string
+    48→  dayNumber: number
+    49→  dayName?: string
+    50→  exercises: TrainingExercise[]
+    51→}
+    52→
+    53→interface Training {
+    54→  id: string
+    55→  name: string
+    56→  mesocycle?: number
+    57→  week?: number
+    58→  isActive: boolean
+    59→  days: TrainingDay[]
+    60→}
+    61→
+    62→interface SessionSet {
+    63→  id?: string
+    64→  setNumber: number
+    65→  reps?: number
+    66→  weight?: number
+    67→  rir?: number
+    68→  rpe?: number
+    69→}
+    70→
+    71→interface SessionExercise {
+    72→  id?: string
+    73→  exerciseName: string
+    74→  order: number
+    75→  sets: SessionSet[]
+    76→  volume?: number
+    77→}
+    78→
+    79→interface Session {
+    80→  id: string
+    81→  date: string
+    82→  notes?: string
+    83→  rpe?: number
+    84→  totalVolume?: number
+    85→  exercises: SessionExercise[]
+    86→  dayNumber?: number
+    87→}
+    88→
+    89→interface Questionnaire {
+    90→  id: string
+    91→  date: string
+    92→  sleepQuality?: number
+    93→  fatigue?: number
+    94→  stress?: number
+    95→  motivation?: number
+    96→  pain?: number
+    97→  energy?: number
+    98→  hunger?: number
+    99→  adherence?: number
+   100→  trainingFeeling?: number
+   101→  overallScore?: number
+   102→  notes?: string
+   103→}
+   104→
+   105→interface Measurement {
+   106→  id: string
+   107→  date: string
+   108→  weight?: number
+   109→  chest?: number
+   110→  waist?: number
+   111→  hips?: number
+   112→}
+   113→
+   114→interface ClientData {
+   115→  id: string
+   116→  name: string
+   117→  age?: number
+   118→  height?: number
+   119→  weight?: number
+   120→  goal?: string
+   121→  experienceLevel?: string
+   122→  injuries?: string
+   123→  weeklyAvailability?: string
+   124→  notes?: string
+   125→  status: 'green' | 'yellow' | 'red'
+   126→  trainings: Training[]
+   127→  sessions: Session[]
+   128→  questionnaires: Questionnaire[]
+   129→  measurements: Measurement[]
+   130→  trainerNotes: { id: string; content: string; createdAt: string }[]
+   131→}
+   132→
+   133→const qFields = [
+   134→  { key: 'sleepQuality', label: 'Calidad del sueño', icon: '😴' },
+   135→  { key: 'fatigue', label: 'Fatiga', icon: '😫' },
+   136→  { key: 'stress', label: 'Estrés', icon: '😰' },
+   137→  { key: 'motivation', label: 'Motivación', icon: '💪' },
+   138→  { key: 'pain', label: 'Dolor/molestias', icon: '🤕' },
+   139→  { key: 'energy', label: 'Energía', icon: '⚡' },
+   140→  { key: 'hunger', label: 'Hambre', icon: '🍽️' },
+   141→  { key: 'adherence', label: 'Adherencia', icon: '✅' },
+   142→  { key: 'trainingFeeling', label: 'Sensaciones entrenamiento', icon: '🏋️' },
+   143→]
+   144→
+   145→export default function ClientDetail({ clientId }: Props) {
+   146→  const { user, view, setView, selectClient } = useStore()
+   147→  const isAdmin = user?.role === 'admin'
+   148→  const [client, setClient] = useState<ClientData | null>(null)
+   149→  const [loading, setLoading] = useState(true)
+   150→  const [activeTab, setActiveTab] = useState(view === 'sessions' ? 'sessions' : view === 'questionnaire' ? 'questionnaire' : view === 'training' ? 'training' : view === 'progress' ? 'progress' : 'profile')
+   151→  const [editMode, setEditMode] = useState(false)
+   152→  const [editForm, setEditForm] = useState<Record<string, string>>({})
+   153→  const [trainerNote, setTrainerNote] = useState('')
+   154→
+   155→  // Training state
+   156→  const [showTrainingForm, setShowTrainingForm] = useState(false)
+   157→  const [trainingForm, setTrainingForm] = useState<Training>({ id: '', name: '', isActive: true, days: [] })
+   158→  const [showSessionForm, setShowSessionForm] = useState(false)
+   159→  const [sessionForm, setSessionForm] = useState<Session>({ id: '', date: new Date().toISOString(), exercises: [] })
+   160→  const [showQuestionnaire, setShowQuestionnaire] = useState(false)
+   161→  const [qForm, setQForm] = useState<Record<string, number>>({})
+   162→  const [qNotes, setQNotes] = useState('')
+   163→  const [showMeasurement, setShowMeasurement] = useState(false)
+   164→  const [measForm, setMeasForm] = useState<Record<string, string>>({})
+   165→
+   166→  useEffect(() => {
+   167→    let cancelled = false
+   168→    apiGet(`/api/clients/${clientId}`).then((data) => {
+   169→      if (cancelled) return
+   170→      setClient(data)
+   171→      if (data) {
+   172→        setEditForm({
+   173→          name: data.name || '',
+   174→          age: data.age?.toString() || '',
+   175→          height: data.height?.toString() || '',
+   176→          weight: data.weight?.toString() || '',
+   177→          goal: data.goal || '',
+   178→          experienceLevel: data.experienceLevel || '',
+   179→          injuries: data.injuries || '',
+   180→          weeklyAvailability: data.weeklyAvailability || '',
+   181→          notes: data.notes || '',
+   182→        })
+   183→      }
+   184→    }).catch(() => {}).finally(() => {
+   185→      if (!cancelled) setLoading(false)
+   186→    })
+   187→    return () => { cancelled = true }
+   188→  }, [clientId])
+   189→
+   190→  const reloadClient = () => {
+   191→    apiGet(`/api/clients/${clientId}`).then((data) => {
+   192→      setClient(data)
+   193→      if (data) {
+   194→        setEditForm({
+   195→          name: data.name || '',
+   196→          age: data.age?.toString() || '',
+   197→          height: data.height?.toString() || '',
+   198→          weight: data.weight?.toString() || '',
+   199→          goal: data.goal || '',
+   200→          experienceLevel: data.experienceLevel || '',
+   201→          injuries: data.injuries || '',
+   202→          weeklyAvailability: data.weeklyAvailability || '',
+   203→          notes: data.notes || '',
+   204→        })
+   205→      }
+   206→    }).catch(() => {})
+   207→  }
+   208→
+   209→  const saveProfile = async () => {
+   210→    try {
+   211→      await apiPut(`/api/clients/${clientId}`, {
+   212→        name: editForm.name,
+   213→        age: editForm.age ? parseInt(editForm.age) : null,
+   214→        height: editForm.height ? parseFloat(editForm.height) : null,
+   215→        weight: editForm.weight ? parseFloat(editForm.weight) : null,
+   216→        goal: editForm.goal || null,
+   217→        experienceLevel: editForm.experienceLevel || null,
+   218→        injuries: editForm.injuries || null,
+   219→        weeklyAvailability: editForm.weeklyAvailability || null,
+   220→        notes: editForm.notes || null,
+   221→      })
+   222→      setEditMode(false)
+   223→      reloadClient()
+   224→    } catch {}
+   225→  }
+   226→
+   227→  const addTrainerNote = async () => {
+   228→    if (!trainerNote.trim()) return
+   229→    try {
+   230→      await apiPost(`/api/clients/${clientId}`, { action: 'addNote', content: trainerNote })
+   231→      setTrainerNote('')
+   232→      reloadClient()
+   233→    } catch {}
+   234→  }
+   235→
+   236→  // Training helpers
+   237→  const addTrainingDay = () => {
+   238→    const num = trainingForm.days.length + 1
+   239→    setTrainingForm({
+   240→      ...trainingForm,
+   241→      days: [...trainingForm.days, { dayNumber: num, dayName: `Día ${num}`, exercises: [] }],
+   242→    })
+   243→  }
+   244→
+   245→  const addExerciseToDay = (dayIdx: number) => {
+   246→    const days = [...trainingForm.days]
+   247→    days[dayIdx] = {
+   248→      ...days[dayIdx],
+   249→      exercises: [...days[dayIdx].exercises, { exerciseName: '', order: days[dayIdx].exercises.length, prescribedSets: 3, prescribedReps: '8-12', prescribedRir: '1-2' }],
+   250→    }
+   251→    setTrainingForm({ ...trainingForm, days })
+   252→  }
+   253→
+   254→  const updateExercise = (dayIdx: number, exIdx: number, field: string, value: string | number) => {
+   255→    const days = [...trainingForm.days]
+   256→    const exercises = [...days[dayIdx].exercises]
+   257→    exercises[exIdx] = { ...exercises[exIdx], [field]: value }
+   258→    days[dayIdx] = { ...days[dayIdx], exercises }
+   259→    setTrainingForm({ ...trainingForm, days })
+   260→  }
+   261→
+   262→  const removeExercise = (dayIdx: number, exIdx: number) => {
+   263→    const days = [...trainingForm.days]
+   264→    days[dayIdx] = { ...days[dayIdx], exercises: days[dayIdx].exercises.filter((_, i) => i !== exIdx) }
+   265→    setTrainingForm({ ...trainingForm, days })
+   266→  }
+   267→
+   268→  const removeTrainingDay = (dayIdx: number) => {
+   269→    const days = trainingForm.days.filter((_, i) => i !== dayIdx).map((d, i) => ({ ...d, dayNumber: i + 1 }))
+   270→    setTrainingForm({ ...trainingForm, days })
+   271→  }
+   272→
+   273→  const saveTraining = async () => {
+   274→    try {
+   275→      const body = {
+   276→        name: trainingForm.name,
+   277→        mesocycle: trainingForm.mesocycle || 1,
+   278→        week: trainingForm.week || 1,
+   279→        clientId,
+   280→        days: trainingForm.days.map((d) => ({
+   281→          dayNumber: d.dayNumber,
+   282→          dayName: d.dayName,
+   283→          exercises: d.exercises.map((e) => ({
+   284→            exerciseName: e.exerciseName,
+   285→            order: e.order,
+   286→            prescribedSets: e.prescribedSets,
+   287→            prescribedReps: e.prescribedReps,
+   288→            prescribedRir: e.prescribedRir,
+   289→            prescribedRpe: e.prescribedRpe,
+   290→            prescribedRest: e.prescribedRest,
+   291→            prescribedTempo: e.prescribedTempo,
+   292→            prescribedWeight: e.prescribedWeight,
+   293→            notes: e.notes,
+   294→          })),
+   295→        })),
+   296→      }
+   297→      if (trainingForm.id) {
+   298→        await apiPut(`/api/trainings/${trainingForm.id}`, body)
+   299→      } else {
+   300→        await apiPost('/api/trainings', body)
+   301→      }
+   302→      setShowTrainingForm(false)
+   303→      setTrainingForm({ id: '', name: '', isActive: true, days: [] })
+   304→      reloadClient()
+   305→    } catch {}
+   306→  }
+   307→
+   308→  const duplicateTraining = async (t: Training) => {
+   309→    try {
+   310→      await apiGet(`/api/trainings/${t.id}?duplicate=true`)
+   311→      reloadClient()
+   312→    } catch {}
+   313→  }
+   314→
+   315→  const deleteTraining = async (id: string) => {
+   316→    try {
+   317→      await apiDelete(`/api/trainings/${id}`)
+   318→      reloadClient()
+   319→    } catch {}
+   320→  }
+   321→
+   322→  // Session helpers
+   323→  const startSession = (dayIdx: number) => {
+   324→    const day = client?.trainings.find(t => t.isActive)?.days[dayIdx]
+   325→    if (!day) return
+   326→    setSessionForm({
+   327→      id: '', date: new Date().toISOString(),
+   328→      exercises: day.exercises.map((e) => ({
+   329→        exerciseName: e.exerciseName,
+   330→        order: e.order,
+   331→        sets: Array.from({ length: e.prescribedSets || 3 }, (_, i) => ({ setNumber: i + 1 })),
+   332→      })),
+   333→    })
+   334→    setShowSessionForm(true)
+   335→  }
+   336→
+   337→  const addSetToExercise = (exIdx: number) => {
+   338→    const exercises = [...sessionForm.exercises]
+   339→    const sets = [...exercises[exIdx].sets]
+   340→    sets.push({ setNumber: sets.length + 1 })
+   341→    exercises[exIdx] = { ...exercises[exIdx], sets }
+   342→    setSessionForm({ ...sessionForm, exercises })
+   343→  }
+   344→
+   345→  const updateSessionSet = (exIdx: number, setIdx: number, field: string, value: number | undefined) => {
+   346→    const exercises = [...sessionForm.exercises]
+   347→    const sets = [...exercises[exIdx].sets]
+   348→    sets[setIdx] = { ...sets[setIdx], [field]: value }
+   349→    exercises[exIdx] = { ...exercises[exIdx], sets }
+   350→    setSessionForm({ ...sessionForm, exercises })
+   351→  }
+   352→
+   353→  const saveSession = async () => {
+   354→    try {
+   355→      const activeTraining = client?.trainings.find(t => t.isActive)
+   356→      await apiPost('/api/sessions', {
+   357→        clientId,
+   358→        trainingId: activeTraining?.id,
+   359→        notes: sessionForm.notes,
+   360→        rpe: sessionForm.rpe,
+   361→        exercises: sessionForm.exercises.map((e) => ({
+   362→          exerciseName: e.exerciseName,
+   363→          order: e.order,
+   364→          sets: e.sets.map((s) => ({
+   365→            setNumber: s.setNumber,
+   366→            reps: s.reps,
+   367→            weight: s.weight,
+   368→            rir: s.rir,
+   369→            rpe: s.rpe,
+   370→          })),
+   371→        })),
+   372→      })
+   373→      setShowSessionForm(false)
+   374→      setSessionForm({ id: '', date: new Date().toISOString(), exercises: [] })
+   375→      reloadClient()
+   376→    } catch {}
+   377→  }
+   378→
+   379→  // Questionnaire
+   380→  const saveQuestionnaire = async () => {
+   381→    try {
+   382→      await apiPost('/api/questionnaires', {
+   383→        clientId,
+   384→        sleepQuality: qForm.sleepQuality,
+   385→        fatigue: qForm.fatigue,
+   386→        stress: qForm.stress,
+   387→        motivation: qForm.motivation,
+   388→        pain: qForm.pain,
+   389→        energy: qForm.energy,
+   390→        hunger: qForm.hunger,
+   391→        adherence: qForm.adherence,
+   392→        trainingFeeling: qForm.trainingFeeling,
+   393→        notes: qNotes,
+   394→      })
+   395→      setShowQuestionnaire(false)
+   396→      setQForm({})
+   397→      setQNotes('')
+   398→      reloadClient()
+   399→    } catch {}
+   400→  }
+   401→
+   402→  // Measurement
+   403→  const saveMeasurement = async () => {
+   404→    try {
+   405→      await apiPost('/api/measurements', {
+   406→        clientId,
+   407→        weight: measForm.weight ? parseFloat(measForm.weight) : null,
+   408→        chest: measForm.chest ? parseFloat(measForm.chest) : null,
+   409→        waist: measForm.waist ? parseFloat(measForm.waist) : null,
+   410→        hips: measForm.hips ? parseFloat(measForm.hips) : null,
+   411→      })
+   412→      setShowMeasurement(false)
+   413→      setMeasForm({})
+   414→      reloadClient()
+   415→    } catch {}
+   416→  }
+   417→
+   418→  const deleteClient = async () => {
+   419→    if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return
+   420→    try {
+   421→      await apiDelete(`/api/clients/${clientId}`)
+   422→      selectClient(null)
+   423→      setView('clients')
+   424→    } catch {}
+   425→  }
+   426→
+   427→  const statusConfig = {
+   428→    green: { label: 'Correcto', color: '#22c55e', bg: 'bg-green-50' },
+   429→    yellow: { label: 'Revisar', color: '#eab308', bg: 'bg-yellow-50' },
+   430→    red: { label: 'Atención', color: '#ef4444', bg: 'bg-red-50' },
+   431→  }
+   432→
+   433→  const getScoreColor = (score?: number) => {
+   434→    if (!score) return 'text-muted-foreground'
+   435→    if (score >= 70) return 'text-green-600'
+   436→    if (score >= 40) return 'text-yellow-600'
+   437→    return 'text-red-600'
+   438→  }
+   439→
+   440→  const getScoreBg = (score?: number) => {
+   441→    if (!score) return 'bg-muted'
+   442→    if (score >= 70) return 'bg-green-500'
+   443→    if (score >= 40) return 'bg-yellow-500'
+   444→    return 'bg-red-500'
+   445→  }
+   446→
+   447→  if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Cargando...</div>
+   448→  if (!client) return <div className="text-center py-12 text-muted-foreground">Cliente no encontrado</div>
+   449→
+   450→  const sc = statusConfig[client.status as keyof typeof statusConfig] || statusConfig.red
+   451→  const latestQ = client.questionnaires?.[0]
+   452→  const weightData = client.measurements?.filter(m => m.weight).map(m => ({ date: new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }), peso: m.weight })) || []
+   453→  const volumeData = client.sessions?.slice(-10).map(s => ({ date: new Date(s.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }), volumen: s.totalVolume || 0 })) || []
+   454→
+   455→  return (
+   456→    <div className="space-y-6">
+   457→      {/* Header */}
+   458→      <div className="flex items-center gap-4 flex-wrap">
+   459→        <Button variant="ghost" size="icon" onClick={() => { selectClient(null); setView('clients') }}>
+   460→          <ArrowLeft className="h-5 w-5" />
+   461→        </Button>
+   462→        <div className="flex-1 min-w-0">
+   463→          <div className="flex items-center gap-3 flex-wrap">
+   464→            <h1 className="text-2xl font-light tracking-wider text-[#2D4A3E]">{client.name}</h1>
+   465→            <Badge variant="outline" className="text-xs" style={{ borderColor: sc.color, color: sc.color }}>{sc.label}</Badge>
+   466→          </div>
+   467→          <p className="text-sm text-muted-foreground mt-1">{client.goal || 'Sin objetivo'}{client.weight ? ` · ${client.weight} kg` : ''}</p>
+   468→        </div>
+   469→        {isAdmin && (
+   470→          <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50" onClick={deleteClient}>
+   471→            <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+   472→          </Button>
+   473→        )}
+   474→      </div>
+   475→
+   476→      {/* Tabs */}
+   477→      <div className="bg-white shadow-sm p-1 h-auto flex-wrap gap-1 flex rounded-lg">
+   478→        {[
+   479→          { value: 'profile', label: 'Perfil', icon: <Activity className="h-3.5 w-3.5 mr-1.5" /> },
+   480→          { value: 'training', label: 'Entrenamiento', icon: <FileText className="h-3.5 w-3.5 mr-1.5" /> },
+   481→          { value: 'sessions', label: 'Sesiones', icon: <ClipboardList className="h-3.5 w-3.5 mr-1.5" /> },
+   482→          { value: 'questionnaire', label: 'Cuestionario', icon: <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> },
+   483→          { value: 'progress', label: 'Progreso', icon: <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> },
+   484→        ].map((tab) => (
+   485→          <button
+   486→            key={tab.value}
+   487→            onClick={() => setActiveTab(tab.value)}
+   488→            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${activeTab === tab.value ? 'bg-[#2D4A3E] text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+   489→          >
+   490→            {tab.icon}
+   491→            {tab.label}
+   492→          </button>
+   493→        ))}
+   494→      </div>
+   495→
+   496→        {/* PROFILE TAB */}
+   497→      {activeTab === 'profile' && <div className="space-y-6 mt-6">
+   498→          <div className="grid md:grid-cols-2 gap-6">
+   499→            <Card className="border-0 shadow-sm">
+   500→              <CardHeader className="pb-3">
+   501→                <div className="flex items-center justify-between">
+   502→                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Datos personales</CardTitle>
+   503→                  {isAdmin && (
+   504→                    <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
+   505→                      <Edit3 className="h-3.5 w-3.5 mr-1" /> {editMode ? 'Cancelar' : 'Editar'}
+   506→                    </Button>
+   507→                  )}
+   508→                </div>
+   509→              </CardHeader>
+   510→              <CardContent>
+   511→                {editMode && isAdmin ? (
+   512→                  <div className="space-y-3">
+   513→                    <div><Label className="text-xs uppercase">Nombre</Label><Input value={editForm.name} onChange={(e) => setEditForm(f => ({...f, name: e.target.value}))} className="mt-1" /></div>
+   514→                    <div className="grid grid-cols-2 gap-3">
+   515→                      <div><Label className="text-xs uppercase">Edad</Label><Input type="number" value={editForm.age} onChange={(e) => setEditForm(f => ({...f, age: e.target.value}))} className="mt-1" /></div>
+   516→                      <div><Label className="text-xs uppercase">Altura (cm)</Label><Input type="number" value={editForm.height} onChange={(e) => setEditForm(f => ({...f, height: e.target.value}))} className="mt-1" /></div>
+   517→                      <div><Label className="text-xs uppercase">Peso (kg)</Label><Input type="number" step="0.1" value={editForm.weight} onChange={(e) => setEditForm(f => ({...f, weight: e.target.value}))} className="mt-1" /></div>
+   518→                      <div><Label className="text-xs uppercase">Objetivo</Label>
+   519→                        <Select value={editForm.goal} onValueChange={(v) => setEditForm(f => ({...f, goal: v}))}>
+   520→                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+   521→                          <SelectContent>
+   522→                            <SelectItem value="Hipertrofia">Hipertrofia</SelectItem>
+   523→                            <SelectItem value="Fuerza">Fuerza</SelectItem>
+   524→                            <SelectItem value="Resistencia">Resistencia</SelectItem>
+   525→                            <SelectItem value="Recomposición corporal">Recomposición corporal</SelectItem>
+   526→                            <SelectItem value="Pérdida de peso">Pérdida de peso</SelectItem>
+   527→                          </SelectContent>
+   528→                        </Select>
+   529→                      </div>
+   530→                    </div>
+   531→                    <div><Label className="text-xs uppercase">Nivel experiencia</Label>
+   532→                      <Select value={editForm.experienceLevel} onValueChange={(v) => setEditForm(f => ({...f, experienceLevel: v}))}>
+   533→                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+   534→                        <SelectContent>
+   535→                          <SelectItem value="Principiante">Principiante</SelectItem>
+   536→                          <SelectItem value="Intermedio">Intermedio</SelectItem>
+   537→                          <SelectItem value="Avanzado">Avanzado</SelectItem>
+   538→                        </SelectContent>
+   539→                      </Select>
+   540→                    </div>
+   541→                    <div><Label className="text-xs uppercase">Lesiones</Label><Textarea value={editForm.injuries} onChange={(e) => setEditForm(f => ({...f, injuries: e.target.value}))} className="mt-1" rows={2} /></div>
+   542→                    <div><Label className="text-xs uppercase">Disponibilidad</Label><Input value={editForm.weeklyAvailability} onChange={(e) => setEditForm(f => ({...f, weeklyAvailability: e.target.value}))} className="mt-1" /></div>
+   543→                    <Button onClick={saveProfile} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white w-full"><Save className="h-4 w-4 mr-2" /> Guardar cambios</Button>
+   544→                  </div>
+   545→                ) : (
+   546→                  <dl className="space-y-3 text-sm">
+   547→                    {[
+   548→                      ['Edad', client.age ? `${client.age} años` : '—'],
+   549→                      ['Altura', client.height ? `${client.height} cm` : '—'],
+   550→                      ['Peso', client.weight ? `${client.weight} kg` : '—'],
+   551→                      ['Objetivo', client.goal || '—'],
+   552→                      ['Nivel', client.experienceLevel || '—'],
+   553→                      ['Disponibilidad', client.weeklyAvailability || '—'],
+   554→                    ].map(([label, val]) => (
+   555→                      <div key={label} className="flex justify-between"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium">{val}</dd></div>
+   556→                    ))}
+   557→                    {client.injuries && <div><dt className="text-muted-foreground text-xs uppercase">Lesiones</dt><dd className="mt-1 text-xs">{client.injuries}</dd></div>}
+   558→                  </dl>
+   559→                )}
+   560→              </CardContent>
+   561→            </Card>
+   562→
+   563→            <div className="space-y-6">
+   564→              {/* Latest questionnaire score */}
+   565→              {latestQ && (
+   566→                <Card className="border-0 shadow-sm">
+   567→                  <CardContent className="p-5">
+   568→                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Estado general</p>
+   569→                    <div className="flex items-center gap-4">
+   570→                      <div className={`text-4xl font-light ${getScoreColor(latestQ.overallScore)}`}>{Math.round(latestQ.overallScore || 0)}%</div>
+   571→                      <div className="flex-1">
+   572→                        <Progress value={latestQ.overallScore || 0} className={`h-2 ${getScoreBg(latestQ.overallScore)}`} />
+   573→                        <p className="text-xs text-muted-foreground mt-1">{new Date(latestQ.date).toLocaleDateString('es-ES')}</p>
+   574→                      </div>
+   575→                    </div>
+   576→                  </CardContent>
+   577→                </Card>
+   578→              )}
+   579→
+   580→              {/* Quick actions */}
+   581→              <Card className="border-0 shadow-sm">
+   582→                <CardContent className="p-5 space-y-2">
+   583→                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Acciones rápidas</p>
+   584→                  {isAdmin && <Button variant="outline" className="w-full justify-start" onClick={() => setShowMeasurement(true)}><Plus className="h-4 w-4 mr-2" /> Registrar peso/medidas</Button>}
+   585→                  {(isAdmin || user?.role === 'client') && <Button variant="outline" className="w-full justify-start" onClick={() => setShowQuestionnaire(true)}><Plus className="h-4 w-4 mr-2" /> Nuevo cuestionario</Button>}
+   586→                </CardContent>
+   587→              </Card>
+   588→
+   589→              {/* Trainer notes */}
+   590→              {isAdmin && (
+   591→                <Card className="border-0 shadow-sm">
+   592→                  <CardHeader className="pb-3"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notas del entrenador</CardTitle></CardHeader>
+   593→                  <CardContent className="space-y-3">
+   594→                    {client.trainerNotes?.map(n => (
+   595→                      <div key={n.id} className="text-xs border-l-2 border-[#2D4A3E] pl-3 py-1">
+   596→                        <p>{n.content}</p>
+   597→                        <p className="text-muted-foreground mt-1">{new Date(n.createdAt).toLocaleDateString('es-ES')}</p>
+   598→                      </div>
+   599→                    ))}
+   600→                    <div className="flex gap-2">
+   601→                      <Input value={trainerNote} onChange={(e) => setTrainerNote(e.target.value)} placeholder="Añadir nota..." className="text-sm" onKeyDown={(e) => e.key === 'Enter' && addTrainerNote()} />
+   602→                      <Button size="icon" variant="ghost" onClick={addTrainerNote}><Save className="h-4 w-4" /></Button>
+   603→                    </div>
+   604→                  </CardContent>
+   605→                </Card>
+   606→              )}
+   607→            </div>
+   608→          </div>
+   609→
+   610→          {/* Measurements history */}
+   611→          {client.measurements?.length > 0 && (
+   612→            <Card className="border-0 shadow-sm">
+   613→              <CardHeader className="pb-3"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historial de medidas</CardTitle></CardHeader>
+   614→              <CardContent>
+   615→                <div className="overflow-x-auto">
+   616→                  <table className="w-full text-sm">
+   617→                    <thead><tr className="border-b text-left text-xs text-muted-foreground">
+   618→                      <th className="pb-2 pr-4">Fecha</th><th className="pb-2 pr-4">Peso</th><th className="pb-2 pr-4">Pecho</th><th className="pb-2 pr-4">Cintura</th><th className="pb-2">Cadera</th>
+   619→                    </tr></thead>
+   620→                    <tbody>
+   621→                      {client.measurements.map(m => (
+   622→                        <tr key={m.id} className="border-b last:border-0">
+   623→                          <td className="py-2 pr-4 text-muted-foreground">{new Date(m.date).toLocaleDateString('es-ES')}</td>
+   624→                          <td className="py-2 pr-4">{m.weight || '—'}</td>
+   625→                          <td className="py-2 pr-4">{m.chest || '—'}</td>
+   626→                          <td className="py-2 pr-4">{m.waist || '—'}</td>
+   627→                          <td className="py-2">{m.hips || '—'}</td>
+   628→                        </tr>
+   629→                      ))}
+   630→                    </tbody>
+   631→                  </table>
+   632→                </div>
+   633→              </CardContent>
+   634→            </Card>
+   635→          )}
+   636→      </div>}
+   637→
+   638→        {/* TRAINING TAB */}
+   639→      {activeTab === 'training' && <div className="space-y-6 mt-6">
+   640→          <div className="flex items-center justify-between flex-wrap gap-3">
+   641→            <h2 className="text-lg font-medium text-[#2D4A3E]">Programas de entrenamiento</h2>
+   642→            {isAdmin && (
+   643→              <Button className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setShowTrainingForm(true) }}>
+   644→                <Plus className="h-4 w-4 mr-1.5" /> Nuevo programa
+   645→              </Button>
+   646→            )}
+   647→          </div>
+   648→
+   649→          {!client.trainings?.length ? (
+   650→            <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">No hay programas de entrenamiento</CardContent></Card>
+   651→          ) : (
+   652→            <div className="space-y-4">
+   653→              {client.trainings.map((t) => (
+   654→                <Card key={t.id} className="border-0 shadow-sm">
+   655→                  <CardHeader className="pb-3">
+   656→                    <div className="flex items-center justify-between flex-wrap gap-2">
+   657→                      <div className="flex items-center gap-3">
+   658→                        <CardTitle className="text-sm font-medium">{t.name || `M${t.mesocycle} - S${t.week}`}</CardTitle>
+   659→                        <Badge variant={t.isActive ? 'default' : 'secondary'} className="text-[10px]" style={t.isActive ? { backgroundColor: '#2D4A3E' } : {}}>{t.isActive ? 'Activo' : 'Inactivo'}</Badge>
+   660→                      </div>
+   661→                      {isAdmin && (
+   662→                        <div className="flex gap-1">
+   663→                          <Button variant="ghost" size="sm" onClick={() => duplicateTraining(t)}><Copy className="h-3.5 w-3.5" /></Button>
+   664→                          <Button variant="ghost" size="sm" onClick={() => { setTrainingForm(t); setShowTrainingForm(true) }}><Edit3 className="h-3.5 w-3.5" /></Button>
+   665→                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteTraining(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+   666→                        </div>
+   667→                      )}
+   668→                    </div>
+   669→                  </CardHeader>
+   670→                  <CardContent>
+   671→                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+   672→                      {t.days.map((day, dayIdx) => (
+   673→                        <div key={day.id || dayIdx} className="border rounded-lg p-3">
+   674→                          <div className="flex items-center justify-between mb-2">
+   675→                            <h4 className="text-xs font-medium uppercase tracking-wider text-[#2D4A3E]">{day.dayName || `Día ${day.dayNumber}`}</h4>
+   676→                            <span className="text-[10px] text-muted-foreground">{day.exercises.length} ej.</span>
+   677→                          </div>
+   678→                          {isAdmin && (
+   679→                            <Button variant="ghost" size="sm" className="w-full mb-2 text-xs text-[#2D4A3E]" onClick={() => startSession(dayIdx)}>
+   680→                              <Plus className="h-3 w-3 mr-1" /> Registrar sesión
+   681→                            </Button>
+   682→                          )}
+   683→                          <div className="space-y-1">
+   684→                            {day.exercises.map((ex, exIdx) => (
+   685→                              <div key={ex.id || exIdx} className="text-xs flex justify-between">
+   686→                                <span className="truncate">{ex.exerciseName}</span>
+   687→                                <span className="text-muted-foreground shrink-0 ml-2">{ex.prescribedSets}×{ex.prescribedReps}</span>
+   688→                              </div>
+   689→                            ))}
+   690→                          </div>
+   691→                        </div>
+   692→                      ))}
+   693→                    </div>
+   694→                  </CardContent>
+   695→                </Card>
+   696→              ))}
+   697→            </div>
+   698→          )}
+   699→      </div>}
+   700→
+   701→        {/* SESSIONS TAB */}
+   702→      {activeTab === 'sessions' && <div className="space-y-6 mt-6">
+   703→          <div className="flex items-center justify-between">
+   704→            <h2 className="text-lg font-medium text-[#2D4A3E]">Sesiones registradas</h2>
+   705→            {(isAdmin || user?.role === 'client') && (
+   706→              <Button className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white text-sm" onClick={() => {
+   707→                setSessionForm({ id: '', date: new Date().toISOString(), exercises: [{ exerciseName: '', order: 0, sets: [{ setNumber: 1 }] }] })
+   708→                setShowSessionForm(true)
+   709→              }}>
+   710→                <Plus className="h-4 w-4 mr-1.5" /> Nueva sesión
+   711→              </Button>
+   712→            )}
+   713→          </div>
+   714→          {!client.sessions?.length ? (
+   715→            <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">No hay sesiones registradas</CardContent></Card>
+   716→          ) : (
+   717→            <div className="space-y-3">
+   718→              {client.sessions.map((s) => (
+   719→                <SessionCard key={s.id} session={s} />
+   720→              ))}
+   721→            </div>
+   722→          )}
+   723→      </div>}
+   724→
+   725→        {/* QUESTIONNAIRE TAB */}
+   726→      {activeTab === 'questionnaire' && <div className="space-y-6 mt-6">
+   727→          <div className="flex items-center justify-between">
+   728→            <h2 className="text-lg font-medium text-[#2D4A3E]">Cuestionario de seguimiento</h2>
+   729→            {(isAdmin || user?.role === 'client') && (
+   730→              <Button className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white text-sm" onClick={() => setShowQuestionnaire(true)}>
+   731→                <Plus className="h-4 w-4 mr-1.5" /> Nuevo cuestionario
+   732→              </Button>
+   733→            )}
+   734→          </div>
+   735→
+   736→          {latestQ && (
+   737→            <Card className="border-0 shadow-sm">
+   738→              <CardContent className="p-5">
+   739→                <div className="flex items-center gap-4 mb-4">
+   740→                  <div className={`text-5xl font-light ${getScoreColor(latestQ.overallScore)}`}>{Math.round(latestQ.overallScore || 0)}%</div>
+   741→                  <div>
+   742→                    <p className="text-sm font-medium">Puntuación global</p>
+   743→                    <p className="text-xs text-muted-foreground">{new Date(latestQ.date).toLocaleDateString('es-ES')}</p>
+   744→                  </div>
+   745→                </div>
+   746→                <Progress value={latestQ.overallScore || 0} className={`h-2.5 ${getScoreBg(latestQ.overallScore)}`} />
+   747→                <div className="grid grid-cols-3 gap-3 mt-4">
+   748→                  {qFields.map(f => (
+   749→                    <div key={f.key} className="text-center p-2 rounded bg-muted/50">
+   750→                      <p className="text-lg">{f.icon}</p>
+   751→                      <p className="text-[10px] text-muted-foreground mt-1">{f.label}</p>
+   752→                      <p className="text-sm font-medium">{(latestQ as Record<string, unknown>)[f.key] as number || '—'}/10</p>
+   753→                    </div>
+   754→                  ))}
+   755→                </div>
+   756→              </CardContent>
+   757→            </Card>
+   758→          )}
+   759→
+   760→          {client.questionnaires?.length > 1 && (
+   761→            <Card className="border-0 shadow-sm">
+   762→              <CardHeader className="pb-3"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tendencia</CardTitle></CardHeader>
+   763→              <CardContent className="h-48">
+   764→                <ResponsiveContainer width="100%" height="100%">
+   765→                  <LineChart data={[...client.questionnaires].reverse().map(q => ({ date: new Date(q.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }), score: q.overallScore }))}>
+   766→                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+   767→                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+   768→                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+   769→                    <Tooltip />
+   770→                    <Line type="monotone" dataKey="score" stroke="#2D4A3E" strokeWidth={2} dot={{ fill: '#2D4A3E' }} />
+   771→                  </LineChart>
+   772→                </ResponsiveContainer>
+   773→              </CardContent>
+   774→            </Card>
+   775→          )}
+   776→
+   777→          {client.questionnaires?.length > 0 && (
+   778→            <div className="space-y-2">
+   779→              {client.questionnaires.map(q => (
+   780→                <Card key={q.id} className="border-0 shadow-sm">
+   781→                  <CardContent className="py-3 px-4 flex items-center justify-between">
+   782→                    <div className="flex items-center gap-3">
+   783→                      <span className="text-xs text-muted-foreground w-20">{new Date(q.date).toLocaleDateString('es-ES')}</span>
+   784→                      <span className={`text-sm font-medium ${getScoreColor(q.overallScore)}`}>{Math.round(q.overallScore || 0)}%</span>
+   785→                    </div>
+   786→                    <Badge variant="outline" className="text-[10px]" style={{ borderColor: q.overallScore && q.overallScore >= 70 ? '#22c55e' : q.overallScore && q.overallScore >= 40 ? '#eab308' : '#ef4444', color: q.overallScore && q.overallScore >= 70 ? '#22c55e' : q.overallScore && q.overallScore >= 40 ? '#eab308' : '#ef4444' }}>
+   787→                      {q.overallScore && q.overallScore >= 70 ? '🟢' : q.overallScore && q.overallScore >= 40 ? '🟡' : '🔴'}
+   788→                    </Badge>
+   789→                  </CardContent>
+   790→                </Card>
+   791→              ))}
+   792→            </div>
+   793→          )}
+   794→      </div>}
+   795→
+   796→        {/* PROGRESS TAB */}
+   797→      {activeTab === 'progress' && <div className="space-y-6 mt-6">
+   798→          <h2 className="text-lg font-medium text-[#2D4A3E]">Progreso</h2>
+   799→          <div className="grid lg:grid-cols-2 gap-6">
+   800→            {weightData.length > 1 && (
+   801→              <Card className="border-0 shadow-sm">
+   802→                <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Evolución de peso</CardTitle></CardHeader>
+   803→                <CardContent className="h-56">
+   804→                  <ResponsiveContainer width="100%" height="100%">
+   805→                    <LineChart data={weightData}>
+   806→                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+   807→                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+   808→                      <YAxis tick={{ fontSize: 11 }} />
+   809→                      <Tooltip />
+   810→                      <Line type="monotone" dataKey="peso" stroke="#2D4A3E" strokeWidth={2} dot={{ fill: '#2D4A3E' }} />
+   811→                    </LineChart>
+   812→                  </ResponsiveContainer>
+   813→                </CardContent>
+   814→              </Card>
+   815→            )}
+   816→            {volumeData.length > 1 && (
+   817→              <Card className="border-0 shadow-sm">
+   818→                <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Volumen por sesión</CardTitle></CardHeader>
+   819→                <CardContent className="h-56">
+   820→                  <ResponsiveContainer width="100%" height="100%">
+   821→                    <BarChart data={volumeData}>
+   822→                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+   823→                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+   824→                      <YAxis tick={{ fontSize: 11 }} />
+   825→                      <Tooltip />
+   826→                      <Bar dataKey="volumen" fill="#2D4A3E" radius={[4, 4, 0, 0]} />
+   827→                    </BarChart>
+   828→                  </ResponsiveContainer>
+   829→                </CardContent>
+   830→              </Card>
+   831→            )}
+   832→          </div>
+   833→          {weightData.length <= 1 && volumeData.length <= 1 && (
+   834→            <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">Registra más datos para ver gráficos de progreso</CardContent></Card>
+   835→          )}
+   836→      </div>}
+   837→
+   838→
+   839→      {/* DIALOGS */}
+   840→      {/* Training Editor Dialog */}
+   841→      <Dialog open={showTrainingForm} onOpenChange={setShowTrainingForm}>
+   842→        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+   843→          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Programa de entrenamiento</DialogTitle></DialogHeader>
+   844→          <div className="space-y-4">
+   845→            <div className="grid grid-cols-3 gap-3">
+   846→              <div className="col-span-2"><Label className="text-xs uppercase">Nombre</Label><Input value={trainingForm.name} onChange={(e) => setTrainingForm(f => ({...f, name: e.target.value}))} className="mt-1" placeholder="Ej: Mesociclo 7 - Semana 1" /></div>
+   847→              <div className="grid grid-cols-2 gap-2">
+   848→                <div><Label className="text-xs uppercase">Meso</Label><Input type="number" value={trainingForm.mesocycle || ''} onChange={(e) => setTrainingForm(f => ({...f, mesocycle: parseInt(e.target.value) || undefined}))} className="mt-1" /></div>
+   849→                <div><Label className="text-xs uppercase">Semana</Label><Input type="number" value={trainingForm.week || ''} onChange={(e) => setTrainingForm(f => ({...f, week: parseInt(e.target.value) || undefined}))} className="mt-1" /></div>
+   850→              </div>
+   851→            </div>
+   852→
+   853→            {trainingForm.days.map((day, dayIdx) => (
+   854→              <div key={dayIdx} className="border rounded-lg p-4 space-y-3">
+   855→                <div className="flex items-center justify-between">
+   856→                  <div className="flex items-center gap-2">
+   857→                    <span className="text-xs font-medium uppercase tracking-wider text-[#2D4A3E]">Día {day.dayNumber}</span>
+   858→                    <Input value={day.dayName || ''} onChange={(e) => {
+   859→                      const days = [...trainingForm.days]
+   860→                      days[dayIdx] = {...days[dayIdx], dayName: e.target.value}
+   861→                      setTrainingForm({...trainingForm, days})
+   862→                    }} className="h-7 w-32 text-xs" placeholder="Nombre del día" />
+   863→                  </div>
+   864→                  <Button variant="ghost" size="sm" className="text-red-500 h-7" onClick={() => removeTrainingDay(dayIdx)}><Trash2 className="h-3.5 w-3.5" /></Button>
+   865→                </div>
+   866→                {day.exercises.map((ex, exIdx) => (
+   867→                  <div key={exIdx} className="border rounded p-3 bg-muted/30 space-y-2">
+   868→                    <div className="flex items-center gap-2 flex-wrap">
+   869→                      <Input value={ex.exerciseName} onChange={(e) => updateExercise(dayIdx, exIdx, 'exerciseName', e.target.value)} className="h-8 flex-1 min-w-[140px] text-sm" placeholder="Nombre del ejercicio" />
+   870→                      <Button variant="ghost" size="sm" className="text-red-500 h-8" onClick={() => removeExercise(dayIdx, exIdx)}><Trash2 className="h-3.5 w-3.5" /></Button>
+   871→                    </div>
+   872→                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+   873→                      <div><Label className="text-[10px] uppercase text-muted-foreground">Series</Label><Input type="number" value={ex.prescribedSets || ''} onChange={(e) => updateExercise(dayIdx, exIdx, 'prescribedSets', parseInt(e.target.value) || 0)} className="h-7 text-xs" /></div>
+   874→                      <div><Label className="text-[10px] uppercase text-muted-foreground">Reps</Label><Input value={ex.prescribedReps || ''} onChange={(e) => updateExercise(dayIdx, exIdx, 'prescribedReps', e.target.value)} className="h-7 text-xs" placeholder="8-12" /></div>
+   875→                      <div><Label className="text-[10px] uppercase text-muted-foreground">RIR</Label><Input value={ex.prescribedRir || ''} onChange={(e) => updateExercise(dayIdx, exIdx, 'prescribedRir', e.target.value)} className="h-7 text-xs" placeholder="1-2" /></div>
+   876→                      <div><Label className="text-[10px] uppercase text-muted-foreground">Descanso(s)</Label><Input type="number" value={ex.prescribedRest || ''} onChange={(e) => updateExercise(dayIdx, exIdx, 'prescribedRest', parseInt(e.target.value) || 0)} className="h-7 text-xs" /></div>
+   877→                    </div>
+   878→                    <div><Label className="text-[10px] uppercase text-muted-foreground">Notas</Label><Input value={ex.notes || ''} onChange={(e) => updateExercise(dayIdx, exIdx, 'notes', e.target.value)} className="h-7 text-xs" placeholder="Notas del ejercicio" /></div>
+   879→                  </div>
+   880→                ))}
+   881→                <Button variant="outline" size="sm" className="w-full" onClick={() => addExerciseToDay(dayIdx)}><Plus className="h-3.5 w-3.5 mr-1" /> Añadir ejercicio</Button>
+   882→              </div>
+   883→            ))}
+   884→
+   885→            <Button variant="outline" className="w-full border-dashed" onClick={addTrainingDay}><Plus className="h-4 w-4 mr-2" /> Añadir día de entrenamiento</Button>
+   886→          </div>
+   887→          <div className="flex gap-3 justify-end pt-2">
+   888→            <Button variant="ghost" onClick={() => setShowTrainingForm(false)}>Cancelar</Button>
+   889→            <Button onClick={saveTraining} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">Guardar programa</Button>
+   890→          </div>
+   891→        </DialogContent>
+   892→      </Dialog>
+   893→
+   894→      {/* Session Logger Dialog */}
+   895→      <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
+   896→        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+   897→          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Registrar sesión</DialogTitle></DialogHeader>
+   898→          <div className="space-y-4">
+   899→            {sessionForm.exercises.map((ex, exIdx) => (
+   900→              <div key={exIdx} className="border rounded-lg p-3 space-y-2">
+   901→                <p className="text-sm font-medium text-[#2D4A3E]">{ex.exerciseName || `Ejercicio ${exIdx + 1}`}</p>
+   902→                <Input value={ex.exerciseName} onChange={(e) => {
+   903→                  const exercises = [...sessionForm.exercises]
+   904→                  exercises[exIdx] = {...exercises[exIdx], exerciseName: e.target.value}
+   905→                  setSessionForm({...sessionForm, exercises})
+   906→                }} className="h-8 text-sm" placeholder="Nombre del ejercicio" />
+   907→                <div className="overflow-x-auto">
+   908→                  <table className="w-full text-xs">
+   909→                    <thead><tr className="text-muted-foreground"><th className="pb-1 text-left w-12">#</th><th className="pb-1 text-left">Reps</th><th className="pb-1 text-left">Kg</th><th className="pb-1 text-left">RIR</th></tr></thead>
+   910→                    <tbody>
+   911→                      {ex.sets.map((set, setIdx) => (
+   912→                        <tr key={setIdx}>
+   913→                          <td className="py-1 text-muted-foreground">{set.setNumber}</td>
+   914→                          <td className="py-1"><Input type="number" value={set.reps || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
+   915→                          <td className="py-1"><Input type="number" step="0.5" value={set.weight || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
+   916→                          <td className="py-1"><Input type="number" value={set.rir || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'rir', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
+   917→                        </tr>
+   918→                      ))}
+   919→                    </tbody>
+   920→                  </table>
+   921→                </div>
+   922→                <Button variant="ghost" size="sm" className="text-xs" onClick={() => addSetToExercise(exIdx)}><Plus className="h-3 w-3 mr-1" /> Serie</Button>
+   923→              </div>
+   924→            ))}
+   925→            <div><Label className="text-xs uppercase">Notas</Label><Textarea value={sessionForm.notes || ''} onChange={(e) => setSessionForm(f => ({...f, notes: e.target.value}))} className="mt-1" rows={2} /></div>
+   926→          </div>
+   927→          <div className="flex gap-3 justify-end pt-2">
+   928→            <Button variant="ghost" onClick={() => setShowSessionForm(false)}>Cancelar</Button>
+   929→            <Button onClick={saveSession} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">Guardar sesión</Button>
+   930→          </div>
+   931→        </DialogContent>
+   932→      </Dialog>
+   933→
+   934→      {/* Questionnaire Dialog */}
+   935→      <Dialog open={showQuestionnaire} onOpenChange={setShowQuestionnaire}>
+   936→        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+   937→          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Cuestionario de seguimiento</DialogTitle></DialogHeader>
+   938→          <div className="space-y-5">
+   939→            {qFields.map(f => (
+   940→              <div key={f.key}>
+   941→                <div className="flex items-center justify-between mb-2">
+   942→                  <Label className="text-sm">{f.icon} {f.label}</Label>
+   943→                  <span className="text-sm font-medium text-[#2D4A3E]">{qForm[f.key] || 5}/10</span>
+   944→                </div>
+   945→                <Slider value={[qForm[f.key] || 5]} min={1} max={10} step={1} onValueChange={([v]) => setQForm(prev => ({...prev, [f.key]: v}))} className="[&_[role=slider]]:bg-[#2D4A3E]" />
+   946→              </div>
+   947→            ))}
+   948→            <div><Label className="text-xs uppercase">Notas</Label><Textarea value={qNotes} onChange={(e) => setQNotes(e.target.value)} className="mt-1" rows={2} placeholder="Observaciones adicionales..." /></div>
+   949→          </div>
+   950→          <div className="flex gap-3 justify-end pt-2">
+   951→            <Button variant="ghost" onClick={() => setShowQuestionnaire(false)}>Cancelar</Button>
+   952→            <Button onClick={saveQuestionnaire} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">Enviar cuestionario</Button>
+   953→          </div>
+   954→        </DialogContent>
+   955→      </Dialog>
+   956→
+   957→      {/* Measurement Dialog */}
+   958→      <Dialog open={showMeasurement} onOpenChange={setShowMeasurement}>
+   959→        <DialogContent className="max-w-sm">
+   960→          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Registrar medidas</DialogTitle></DialogHeader>
+   961→          <div className="space-y-3">
+   962→            <div><Label className="text-xs uppercase">Peso (kg)</Label><Input type="number" step="0.1" value={measForm.weight || ''} onChange={(e) => setMeasForm(f => ({...f, weight: e.target.value}))} className="mt-1" /></div>
+   963→            <div><Label className="text-xs uppercase">Pecho (cm)</Label><Input type="number" step="0.1" value={measForm.chest || ''} onChange={(e) => setMeasForm(f => ({...f, chest: e.target.value}))} className="mt-1" /></div>
+   964→            <div><Label className="text-xs uppercase">Cintura (cm)</Label><Input type="number" step="0.1" value={measForm.waist || ''} onChange={(e) => setMeasForm(f => ({...f, waist: e.target.value}))} className="mt-1" /></div>
+   965→            <div><Label className="text-xs uppercase">Cadera (cm)</Label><Input type="number" step="0.1" value={measForm.hips || ''} onChange={(e) => setMeasForm(f => ({...f, hips: e.target.value}))} className="mt-1" /></div>
+   966→          </div>
+   967→          <div className="flex gap-3 justify-end pt-2">
+   968→            <Button variant="ghost" onClick={() => setShowMeasurement(false)}>Cancelar</Button>
+   969→            <Button onClick={saveMeasurement} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">Guardar</Button>
+   970→          </div>
+   971→        </DialogContent>
+   972→      </Dialog>
+   973→    </div>
+   974→  )
+   975→}
+   976→
+   977→function SessionCard({ session }: { session: Session }) {
+   978→  const [expanded, setExpanded] = useState(false)
+   979→  const date = new Date(session.date)
+   980→  return (
+   981→    <Card className="border-0 shadow-sm">
+   982→      <CardContent className="py-3 px-4">
+   983→        <button className="w-full flex items-center justify-between text-left" onClick={() => setExpanded(!expanded)}>
+   984→          <div className="flex items-center gap-3">
+   985→            <Calendar className="h-4 w-4 text-muted-foreground" />
+   986→            <div>
+   987→              <p className="text-sm font-medium">{date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+   988→              <p className="text-xs text-muted-foreground">{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}{session.totalVolume ? ` · ${Math.round(session.totalVolume).toLocaleString()} kg vol.` : ''}</p>
+   989→            </div>
+   990→          </div>
+   991→          <div className="flex items-center gap-2">
+   992→            {session.rpe && <Badge variant="outline" className="text-[10px]">RPE {session.rpe}</Badge>}
+   993→            {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+   994→          </div>
+   995→        </button>
+   996→        {expanded && (
+   997→          <div className="mt-3 space-y-3 border-t pt-3">
+   998→            {session.exercises.map((ex, i) => (
+   999→              <div key={i}>
+  1000→                <p className="text-xs font-medium mb-1">{ex.exerciseName}</p>
+  1001→                <div className="flex flex-wrap gap-1">
+  1002→                  {ex.sets.map((s, j) => (
+  1003→                    <span key={j} className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+  1004→                      {s.reps}×{s.weight || '?'}kg{s.rir != null ? ` RIR${s.rir}` : ''}
+  1005→                    </span>
+  1006→                  ))}
+  1007→                  {ex.volume != null && <span className="text-[10px] text-muted-foreground ml-1">Vol: {Math.round(ex.volume)}kg</span>}
+  1008→                </div>
+  1009→              </div>
+  1010→            ))}
+  1011→            {session.notes && <p className="text-xs text-muted-foreground italic">{session.notes}</p>}
+  1012→          </div>
+  1013→        )}
+  1014→      </CardContent>
+  1015→    </Card>
+  1016→  )
+  1017→}
