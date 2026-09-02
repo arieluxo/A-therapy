@@ -118,10 +118,10 @@ export default function AdminPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-light tracking-wider text-[#2D4A3E]">Administración</h1>
+          <h1 className="text-2xl font-light tracking-wider text-[#334155]">Administración</h1>
           <p className="text-sm text-muted-foreground mt-1">Gestión de accesos y usuarios</p>
         </div>
-        <Button className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white text-sm" onClick={openNew}>
+        <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={openNew}>
           <Plus className="h-4 w-4 mr-1.5" /> Nuevo acceso
         </Button>
       </div>
@@ -130,13 +130,13 @@ export default function AdminPanel() {
       <div className="grid grid-cols-3 gap-4">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-light text-[#2D4A3E]">{users.length}</p>
+            <p className="text-2xl font-light text-[#334155]">{users.length}</p>
             <p className="text-xs text-muted-foreground mt-1">Total usuarios</p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-light text-[#2D4A3E]">{clientCount}</p>
+            <p className="text-2xl font-light text-[#334155]">{clientCount}</p>
             <p className="text-xs text-muted-foreground mt-1">Clientes</p>
           </CardContent>
         </Card>
@@ -165,13 +165,13 @@ export default function AdminPanel() {
               {users.map(u => (
                 <div key={u.id} className={`flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors ${!u.isActive ? 'opacity-60' : ''}`}>
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0 ${u.role === 'admin' ? 'bg-[#2D4A3E]' : 'bg-stone-400'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0 ${u.role === 'admin' ? 'bg-[#0E7490]' : 'bg-stone-400'}`}>
                       {u.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{u.name}</p>
-                        <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="text-[10px] shrink-0" style={u.role === 'admin' ? { backgroundColor: '#2D4A3E' } : {}}>
+                        <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="text-[10px] shrink-0" style={u.role === 'admin' ? { backgroundColor: '#334155' } : {}}>
                           {u.role === 'admin' ? 'Admin' : 'Cliente'}
                         </Badge>
                         {u.isActive ? (
@@ -202,10 +202,10 @@ export default function AdminPanel() {
       </Card>
 
       {/* Info card */}
-      <Card className="border-0 shadow-sm bg-[#2D4A3E]/5">
+      <Card className="border-0 shadow-sm bg-[#0E7490]/5">
         <CardContent className="p-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="font-medium text-[#2D4A3E]">Cómo funciona:</span> Al crear un acceso de tipo <strong>Cliente</strong>, se genera automáticamente su perfil de cliente. Al crear un acceso de tipo <strong>Admin</strong>, solo se crea el usuario sin perfil. Puedes editar el email y la contraseña de cualquier usuario desde aquí o desde el perfil del cliente.
+            <span className="font-medium text-[#334155]">Cómo funciona:</span> Al crear un acceso de tipo <strong>Cliente</strong>, se genera automáticamente su perfil de cliente. Al crear un acceso de tipo <strong>Admin</strong>, solo se crea el usuario sin perfil. Puedes editar el email y la contraseña de cualquier usuario desde aquí o desde el perfil del cliente.
           </p>
         </CardContent>
       </Card>
@@ -257,7 +257,7 @@ export default function AdminPanel() {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Button>
-            <Button onClick={save} disabled={saving} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">
+            <Button onClick={save} disabled={saving} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">
               {saving ? 'Guardando...' : 'Guardar'}
             </Button>
           </div>

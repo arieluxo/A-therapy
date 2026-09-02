@@ -71,13 +71,13 @@ export default function ClientList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-light tracking-wider text-[#2D4A3E]">Clientes</h1>
+          <h1 className="text-2xl font-light tracking-wider text-[#334155]">Clientes</h1>
           <p className="text-sm text-muted-foreground mt-1">{clients.length} cliente{clients.length !== 1 ? 's' : ''} registrado{clients.length !== 1 ? 's' : ''}</p>
         </div>
         {user?.role === 'admin' && (
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white tracking-wider text-sm"
+            className="bg-[#0E7490] hover:bg-[#0C5E74] text-white tracking-wider text-sm"
           >
             <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
           </Button>
@@ -115,7 +115,7 @@ export default function ClientList() {
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 rounded-full bg-[#2D4A3E] flex items-center justify-center text-white font-medium">
+                    <div className="w-10 h-10 rounded-full bg-[#0E7490] flex items-center justify-center text-white font-medium">
                       {client.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <Badge variant="outline" className="text-[10px]" style={{ borderColor: sc.color, color: sc.color }}>
@@ -126,7 +126,7 @@ export default function ClientList() {
                   <p className="text-xs text-muted-foreground mt-1">{client.goal || 'Sin objetivo definido'}</p>
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
                     <span className="text-xs text-muted-foreground">{client.weight ? `${client.weight} kg` : '—'}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-[#2D4A3E] transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-[#334155] transition-colors" />
                   </div>
                 </CardContent>
               </Card>

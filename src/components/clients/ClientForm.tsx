@@ -140,7 +140,7 @@ export default function ClientForm({ open, onOpenChange, onCreated, editData }: 
 
           <div className="flex gap-3 justify-end">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading} className="bg-[#2D4A3E] hover:bg-[#1E352C] text-white">
+            <Button type="submit" disabled={loading} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Crear cliente
             </Button>
           </div>

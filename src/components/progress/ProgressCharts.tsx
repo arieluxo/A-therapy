@@ -135,7 +135,7 @@ export default function ProgressCharts({ clientId, sessions, measurements }: Pro
                       }}
                       formatter={(v: number) => [`${v} kg`, 'Peso']}
                     />
-                    <Line type="monotone" dataKey="weight" stroke="#2D4A3E" strokeWidth={2} dot={{ fill: '#2D4A3E', r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="weight" stroke="#334155" strokeWidth={2} dot={{ fill: '#334155', r: 4 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -169,7 +169,7 @@ export default function ProgressCharts({ clientId, sessions, measurements }: Pro
                     {Object.keys(strengthData[0])
                       .filter((k) => k !== 'date')
                       .map((key, i) => {
-                        const colors = ['#2D4A3E', '#eab308', '#ef4444', '#22c55e']
+                        const colors = ['#334155', '#eab308', '#ef4444', '#22c55e']
                         return (
                           <Line
                             key={key}
@@ -213,7 +213,7 @@ export default function ProgressCharts({ clientId, sessions, measurements }: Pro
                       }}
                       formatter={(v: number) => [`${v.toLocaleString()} kg`, 'Volumen']}
                     />
-                    <Bar dataKey="volume" fill="#2D4A3E" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="volume" fill="#334155" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -245,7 +245,7 @@ export default function ProgressCharts({ clientId, sessions, measurements }: Pro
                       }}
                       formatter={(v: number) => [`${v} sesiones`, 'Sesiones']}
                     />
-                    <Bar dataKey="sesiones" fill="#2D4A3E" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="sesiones" fill="#334155" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

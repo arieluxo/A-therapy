@@ -83,7 +83,7 @@ export default function DashboardView() {
               setView('client-detail')
             }
           }}
-          className="bg-[#2D4A3E] hover:bg-[#1E352C]"
+          className="bg-[#0E7490] hover:bg-[#0C5E74]"
         >
           Ver mi perfil
         </Button>
@@ -94,7 +94,7 @@ export default function DashboardView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-light tracking-wider text-[#2D4A3E]">Dashboard</h1>
+        <h1 className="text-2xl font-light tracking-wider text-[#334155]">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">Vista general de tus clientes</p>
       </div>
 
@@ -107,7 +107,7 @@ export default function DashboardView() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
                 <p className="text-3xl font-light mt-1">{total}</p>
               </div>
-              <Users className="h-8 w-8 text-[#2D4A3E]/30" />
+              <Users className="h-8 w-8 text-[#334155]/30" />
             </div>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export default function DashboardView() {
               <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 Clientes
               </CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-[#2D4A3E]" onClick={() => setView('clients')}>
+              <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => setView('clients')}>
                 Ver todos <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
@@ -209,10 +209,10 @@ export default function DashboardView() {
                     <button
                       key={client.id}
                       onClick={() => openClient(client.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-[#2D4A3E]/5 transition-colors text-left ${sc.bg} ${sc.border} border`}
+                      className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-[#0C5E74]/5 transition-colors text-left ${sc.bg} ${sc.border} border`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#2D4A3E] flex items-center justify-center text-white text-xs font-medium shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#0E7490] flex items-center justify-center text-white text-xs font-medium shrink-0">
                           {client.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div className="min-w-0">

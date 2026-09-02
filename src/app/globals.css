@@ -45,25 +45,25 @@
 
 :root {
   --radius: 0.5rem;
-  --background: #f8f7f5;
+  --background: #f5f5f5;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
-  --primary: #2D4A3E;
+  --primary: #334155;
   --primary-foreground: #ffffff;
   --secondary: #f0efed;
   --secondary-foreground: #1a1a1a;
   --muted: #f0efed;
   --muted-foreground: #737373;
-  --accent: #2D4A3E;
+  --accent: #334155;
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --border: #e5e5e0;
   --input: #e5e5e0;
-  --ring: #2D4A3E;
-  --chart-1: #2D4A3E;
+  --ring: #334155;
+  --chart-1: #334155;
   --chart-2: #22c55e;
   --chart-3: #eab308;
   --chart-4: #ef4444;
@@ -75,7 +75,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#f8f7f5] text-foreground;
+    @apply bg-[#f5f5f5] text-foreground;
   }
 }
 
@@ -102,6 +102,6 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2D4A3E;
+  background: #334155;
   cursor: pointer;
 }

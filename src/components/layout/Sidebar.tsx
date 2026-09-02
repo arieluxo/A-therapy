@@ -53,17 +53,17 @@ function NavContent({ onClose }: { onClose?: () => void }) {
       <div className="p-6 flex items-center gap-3">
         <Image src="/logo.png" alt="A-THERAPY" width={36} height={36} className="rounded" />
         <div>
-          <h2 className="text-sm font-semibold tracking-[0.2em] text-[#2D4A3E]">A-THERAPY</h2>
+          <h2 className="text-sm font-semibold tracking-[0.2em] text-[#334155]">A-THERAPY</h2>
           <p className="text-[10px] text-muted-foreground tracking-widest">TRAINING PLATFORM</p>
         </div>
       </div>
-      <Separator className="bg-[#2D4A3E]/10" />
+      <Separator className="bg-[#0E7490]/10" />
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => (
           <Button
             key={item.view}
             variant={view === item.view ? 'secondary' : 'ghost'}
-            className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-[#2D4A3E]/10 text-[#2D4A3E] font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-[#0E7490]/10 text-[#334155] font-medium' : 'text-muted-foreground hover:text-foreground'}`}
             onClick={() => navigate(item.view)}
           >
             {item.icon}
@@ -71,7 +71,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
           </Button>
         ))}
       </nav>
-      <Separator className="bg-[#2D4A3E]/10" />
+      <Separator className="bg-[#0E7490]/10" />
       <div className="p-3 space-y-1">
         <div className="px-3 py-2 text-xs text-muted-foreground">
           <p className="font-medium text-foreground truncate">{user?.name}</p>

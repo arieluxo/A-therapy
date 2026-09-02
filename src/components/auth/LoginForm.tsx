@@ -32,12 +32,12 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f7f5] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4">
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardHeader className="flex flex-col items-center gap-4 pb-2">
           <Image src="/logo.png" alt="A-THERAPY" width={120} height={120} className="rounded-lg" />
           <div className="text-center">
-            <h1 className="text-2xl font-light tracking-[0.3em] text-[#2D4A3E]">A-THERAPY</h1>
+            <h1 className="text-2xl font-light tracking-[0.3em] text-[#334155]">A-THERAPY</h1>
             <p className="text-xs text-muted-foreground mt-1 tracking-wider">STRENGTH · SCIENCE · PERFORMANCE</p>
           </div>
         </CardHeader>
@@ -71,7 +71,7 @@ export default function LoginForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-[#2D4A3E] hover:bg-[#1E352C] text-white tracking-wider text-sm uppercase"
+              className="w-full h-11 bg-[#0E7490] hover:bg-[#0C5E74] text-white tracking-wider text-sm uppercase"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Acceder

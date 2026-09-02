@@ -131,3 +131,27 @@ Stage Summary:
 - Admin experience completely unchanged
 - Verified browser: client login → dashboard with "Hola, Carlos", nav to Seguimiento → questionnaire tab, back to Inicio works
 - Admin login → Dashboard, Clientes, Ejercicios, Administración all intact
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Rebrand colors (grey+blue) + enable client session registration
+
+Work Log:
+- Analyzed uploaded A-THERAPY logo with VLM: primary cyan #00C3E8, secondary gray #A0A0A0
+- Replaced all #2D4A3E (old green) with #334155 (slate gray) for text/headings/borders
+- Replaced all #1E352C (old green hover) with #0E7490 (cyan-700) for interactive elements
+- Made buttons blue (#0E7490) with darker hover (#0C5E74)
+- Changed background from warm beige #f8f7f5 to cool gray #f5f5f5
+- Updated CSS variables: --primary, --accent, --ring, --chart-1, slider thumb
+- Copied new logo to public/logo.png
+- Made "Registrar sesión" button visible to clients in training tab
+- Made exercise name read-only for clients in session dialog (admin can edit)
+- Added RPE session field (1-10) to session dialog
+- Client can create sessions via: (a) "Registrar sesión" on training day, (b) "Nueva sesión" in sessions tab
+
+Stage Summary:
+- Brand palette: slate gray #334155 (structure) + cyan #0E7490 (interactive) on #f5f5f5 background
+- Client can register sessions with reps/kg/RIR per set + RPE + notes
+- Admin still creates training programs; client fills in the data as they train
+- Verified: admin dashboard, client dashboard, session dialog all render with new colors
