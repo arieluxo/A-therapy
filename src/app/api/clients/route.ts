@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         user: {
-          select: { id: true, email: true, role: true, clientId: true, isActive: true },
+          select: { id: true, email: true, role: true, isActive: true },
         },
         _count: {
           select: { trainings: true, sessions: true, measurements: true, questionnaires: true },
@@ -103,17 +103,15 @@ export async function POST(req: NextRequest) {
     const { name, email, password, age, height, weight, goal, experienceLevel, injuries, weeklyAvailability, notes } = body
 
     if (!name || !email || !password) {
-      return Response.json({ error: 'Name, email, and password are required' }, { status: 400 })
+      return Response.json({ error: 'Nombre, email y contraseña son obligatorios' }, { status: 400 })
     }
 
     const existingUser = await db.user.findUnique({ where: { email } })
     if (existingUser) {
-      return Response.json({ error: 'Email already in use' }, { status: 409 })
+      return Response.json({ error: 'El email ya está en uso' }, { status: 409 })
     }
 
     const passwordHash = await hashPassword(password)
-
-    const clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
     const user = await db.user.create({
       data: {
@@ -121,7 +119,6 @@ export async function POST(req: NextRequest) {
         passwordHash,
         name,
         role: 'client',
-        clientId,
         client: {
           create: {
             name,
@@ -136,12 +133,15 @@ export async function POST(req: NextRequest) {
           },
         },
       },
+      include: { client: { select: { id: true } } },
     })
+
+    const realClientId = user.client?.id ?? null
 
     const token = createToken({
       userId: user.id,
       role: user.role,
-      clientId: user.clientId ?? undefined,
+      clientId: realClientId ?? undefined,
     })
 
     return Response.json({
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
-        clientId: user.clientId,
+        clientId: realClientId,
       },
     }, { status: 201 })
   } catch (error) {

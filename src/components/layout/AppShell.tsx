@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import DashboardView from '@/components/dashboard/DashboardView'
 import ClientList from '@/components/clients/ClientList'
 import ClientDetail from '@/components/clients/ClientDetail'
+import ClientDashboard from '@/components/clients/ClientDashboard'
 import ExerciseLibrary from '@/components/exercises/ExerciseLibrary'
 import AdminPanel from '@/components/admin/AdminPanel'
 import { apiPost } from '@/lib/api'
@@ -26,28 +27,59 @@ export default function AppShell() {
     apiPost('/api/auth/seed').catch(() => {})
   }, [])
 
-  useEffect(() => {
-    if (user?.role === 'client' && user.clientId && !selectedClientId) {
-      selectClient(user.clientId)
-    }
-  }, [user, selectedClientId, selectClient])
-
   if (!user || !token) return <LoginForm />
 
+  // Client views — completely separate from admin
+  if (user.role === 'client') {
+    // "Inicio" shows the personalized dashboard
+    if (view === 'client-home') {
+      return (
+        <div className="flex min-h-screen bg-[#f8f7f5]">
+          <Sidebar />
+          <main className="flex-1 min-w-0">
+            <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+              <ClientDashboard />
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    // All other client views → ClientDetail with the right tab
+    const clientId = user.clientId || selectedClientId
+    if (clientId) {
+      return (
+        <div className="flex min-h-screen bg-[#f8f7f5]">
+          <Sidebar />
+          <main className="flex-1 min-w-0">
+            <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+              <ClientDetail clientId={clientId} />
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    // Fallback to dashboard if no clientId
+    return (
+      <div className="flex min-h-screen bg-[#f8f7f5]">
+        <Sidebar />
+        <main className="flex-1 min-w-0">
+          <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+            <ClientDashboard />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Admin views
   const renderView = () => {
     switch (view) {
       case 'dashboard':
-        return user.role === 'client' && selectedClientId ? (
-          <ClientDetail clientId={selectedClientId} />
-        ) : (
-          <DashboardView />
-        )
+        return <DashboardView />
       case 'clients':
-        return selectedClientId ? (
-          <ClientDetail clientId={selectedClientId} />
-        ) : (
-          <ClientList />
-        )
+        return selectedClientId ? <ClientDetail clientId={selectedClientId} /> : <ClientList />
       case 'client-detail':
         return selectedClientId ? <ClientDetail clientId={selectedClientId} /> : <ClientList />
       case 'training':
@@ -58,7 +90,7 @@ export default function AppShell() {
       case 'exercises':
         return <ExerciseLibrary />
       case 'admin':
-        return user.role === 'admin' ? <AdminPanel /> : <DashboardView />
+        return <AdminPanel />
       default:
         return <DashboardView />
     }

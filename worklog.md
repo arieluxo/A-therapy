@@ -108,3 +108,26 @@ Stage Summary:
 - Creating a client user auto-creates the Client profile
 - Email uniqueness enforced on both create and edit
 - Verified end-to-end: login, edit email from client profile, success message, admin panel shows linked profiles
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Create separate client experience (dashboard + navigation) — clients only see their own data
+
+Work Log:
+- Fixed critical bug: login API returned wrong clientId (custom string instead of Prisma Client.id)
+- Fixed clients POST and users POST to not set custom clientId — use real Client.id from relation
+- Added 5 client-specific view types to Zustand store (client-home, client-training, client-sessions, client-questionnaire, client-progress)
+- Client login now redirects to 'client-home' view (not admin dashboard)
+- Created ClientDashboard component: personalized home with KPIs, active training, questionnaire score, last session, weight/volume charts
+- Updated Sidebar: completely separate nav for clients (Inicio, Mi entrenamiento, Mis sesiones, Seguimiento, Progreso) vs admin (Dashboard, Clientes, Ejercicios, Administración)
+- Updated AppShell: client views render ClientDashboard or ClientDetail (with correct tab) based on view; admin views unchanged
+- Updated ClientDetail to map client-* view names to correct tabs
+- Added navigateTo helper in ClientDashboard to set selectedClientId before view change
+
+Stage Summary:
+- Client sees ONLY their data: personalized dashboard, their training, their sessions, their questionnaire, their progress
+- Client sees NO admin features: no client list, no exercise library, no admin panel, no edit buttons
+- Admin experience completely unchanged
+- Verified browser: client login → dashboard with "Hola, Carlos", nav to Seguimiento → questionnaire tab, back to Inicio works
+- Admin login → Dashboard, Clientes, Ejercicios, Administración all intact

@@ -11,23 +11,40 @@ import {
   Settings,
   LogOut,
   Menu,
+  Home,
+  ClipboardList,
+  Activity,
+  TrendingUp,
 } from 'lucide-react'
 import Image from 'next/image'
 
-const navItems: { view: View; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+const adminNavItems: { view: View; label: string; icon: React.ReactNode }[] = [
   { view: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
   { view: 'clients', label: 'Clientes', icon: <Users className="h-5 w-5" /> },
   { view: 'exercises', label: 'Ejercicios', icon: <Dumbbell className="h-5 w-5" /> },
-  { view: 'admin', label: 'Administración', icon: <Settings className="h-5 w-5" />, adminOnly: true },
+  { view: 'admin', label: 'Administración', icon: <Settings className="h-5 w-5" /> },
+]
+
+const clientNavItems: { view: View; label: string; icon: React.ReactNode }[] = [
+  { view: 'client-home', label: 'Inicio', icon: <Home className="h-5 w-5" /> },
+  { view: 'client-training', label: 'Mi entrenamiento', icon: <Dumbbell className="h-5 w-5" /> },
+  { view: 'client-sessions', label: 'Mis sesiones', icon: <Activity className="h-5 w-5" /> },
+  { view: 'client-questionnaire', label: 'Seguimiento', icon: <ClipboardList className="h-5 w-5" /> },
+  { view: 'client-progress', label: 'Progreso', icon: <TrendingUp className="h-5 w-5" /> },
 ]
 
 function NavContent({ onClose }: { onClose?: () => void }) {
   const { user, view, setView, logout, selectClient } = useStore()
   const isAdmin = user?.role === 'admin'
+  const navItems = isAdmin ? adminNavItems : clientNavItems
 
   const navigate = (v: View) => {
-    if (v === 'clients' || v === 'dashboard') selectClient(null)
-    setView(v)
+    if (!isAdmin) {
+      setView(v)
+    } else {
+      if (v === 'clients' || v === 'dashboard') selectClient(null)
+      setView(v)
+    }
     onClose?.()
   }
 
@@ -42,19 +59,17 @@ function NavContent({ onClose }: { onClose?: () => void }) {
       </div>
       <Separator className="bg-[#2D4A3E]/10" />
       <nav className="flex-1 p-3 space-y-1">
-        {navItems
-          .filter((item) => !item.adminOnly || isAdmin)
-          .map((item) => (
-            <Button
-              key={item.view}
-              variant={view === item.view ? 'secondary' : 'ghost'}
-              className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-[#2D4A3E]/10 text-[#2D4A3E] font-medium' : 'text-muted-foreground hover:text-foreground'}`}
-              onClick={() => navigate(item.view)}
-            >
-              {item.icon}
-              {item.label}
-            </Button>
-          ))}
+        {navItems.map((item) => (
+          <Button
+            key={item.view}
+            variant={view === item.view ? 'secondary' : 'ghost'}
+            className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-[#2D4A3E]/10 text-[#2D4A3E] font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => navigate(item.view)}
+          >
+            {item.icon}
+            {item.label}
+          </Button>
+        ))}
       </nav>
       <Separator className="bg-[#2D4A3E]/10" />
       <div className="p-3 space-y-1">

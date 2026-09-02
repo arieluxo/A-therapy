@@ -148,7 +148,7 @@ export default function ClientDetail({ clientId }: Props) {
   const isAdmin = user?.role === 'admin'
   const [client, setClient] = useState<ClientData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState(view === 'sessions' ? 'sessions' : view === 'questionnaire' ? 'questionnaire' : view === 'training' ? 'training' : view === 'progress' ? 'progress' : 'profile')
+  const [activeTab, setActiveTab] = useState(    view === 'sessions' || view === 'client-sessions' ? 'sessions' :    view === 'questionnaire' || view === 'client-questionnaire' ? 'questionnaire' :    view === 'training' || view === 'client-training' ? 'training' :    view === 'progress' || view === 'client-progress' ? 'progress' :    'profile'  )
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState<Record<string, string>>({})
   const [trainerNote, setTrainerNote] = useState('')

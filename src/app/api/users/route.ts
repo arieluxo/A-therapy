@@ -18,7 +18,6 @@ export async function GET(req: NextRequest) {
         email: true,
         name: true,
         role: true,
-        clientId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -62,38 +61,21 @@ export async function POST(req: NextRequest) {
     const userRole = role || 'client'
 
     if (userRole === 'client') {
-      // Auto-create Client record linked to the new user
-      const clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
       const user = await db.user.create({
         data: {
           email,
           passwordHash,
           name,
           role: 'client',
-          clientId,
           client: {
-            create: {
-              name,
-            },
+            create: { name },
           },
         },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          clientId: true,
-          isActive: true,
-          createdAt: true,
-          client: {
-            select: { id: true, name: true },
-          },
-        },
+        include: { client: { select: { id: true, name: true } } },
       })
       return Response.json(user, { status: 201 })
     }
 
-    // Admin user — no client record
     const user = await db.user.create({
       data: {
         email,
@@ -106,12 +88,9 @@ export async function POST(req: NextRequest) {
         email: true,
         name: true,
         role: true,
-        clientId: true,
         isActive: true,
         createdAt: true,
-        client: {
-          select: { id: true, name: true },
-        },
+        client: { select: { id: true, name: true } },
       },
     })
 

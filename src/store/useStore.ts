@@ -13,6 +13,11 @@ type View =
   | 'exercises'
   | 'admin'
   | 'progress'
+  | 'client-home'
+  | 'client-training'
+  | 'client-sessions'
+  | 'client-questionnaire'
+  | 'client-progress'
 
 interface UserInfo {
   id: string
@@ -54,7 +59,7 @@ export const useStore = create<AppState>((set) => ({
   login: (token, user) => {
     localStorage.setItem('at-token', token)
     localStorage.setItem('at-user', JSON.stringify(user))
-    set({ token, user, view: 'dashboard' })
+    set({ token, user, view: user.role === 'client' ? 'client-home' : 'dashboard', selectedClientId: null })
   },
 
   logout: () => {
