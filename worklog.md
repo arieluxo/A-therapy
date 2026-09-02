@@ -155,3 +155,31 @@ Stage Summary:
 - Client can register sessions with reps/kg/RIR per set + RPE + notes
 - Admin still creates training programs; client fills in the data as they train
 - Verified: admin dashboard, client dashboard, session dialog all render with new colors
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Enable client session registration + remove Ejercicios from sidebar
+
+Work Log:
+- Read and analyzed ClientDetail.tsx, Sidebar.tsx, AppShell.tsx, sessions API route
+- Removed 'Ejercicios' nav item from admin sidebar in Sidebar.tsx
+- Added sessionDayNumber and sessionPrescription state to track which training day a session belongs to
+- Modified startSession() to capture dayNumber and prescription reference
+- Added openBlankSession() for admin-only blank session creation
+- Redesigned sessions tab for clients: training day selector card with exercise preview (sets×reps) instead of generic "Nueva sesión" button
+- Enhanced session form dialog: shows prescribed badge (e.g. "4×8-10 RIR 1-2") per exercise, added RPE column per set, added "Añadir ejercicio" button (admin-only)
+- Updated SessionCard to display dayNumber and per-set RPE
+- Added prominent "Registrar sesión de hoy" CTA on ClientDashboard
+- Updated saveSession to include dayNumber in POST payload
+- Fixed JSX parsing error with || operator (replaced with IIFE pattern)
+- Created test training plan (Push/Pull) via API for verification
+- Full browser E2E verification: client login → dashboard CTA → day selector → fill session data → save → admin login → view client sessions with all data
+
+Stage Summary:
+- Clients can now register training sessions from a guided training day selector
+- Sessions include dayNumber tracking for trainer review (shows "Día 1", "Día 2", etc.)
+- Prescribed info (sets×reps, RIR) shown as reference badges in the session form
+- Session form now has RPE column per individual set
+- Admin sidebar cleaned: only Dashboard, Clientes, Administración
+- All session data (reps, weight, RIR, RPE, volume) is saved and fully visible to the trainer

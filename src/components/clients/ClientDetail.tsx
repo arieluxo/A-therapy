@@ -158,6 +158,8 @@ export default function ClientDetail({ clientId }: Props) {
   const [trainingForm, setTrainingForm] = useState<Training>({ id: '', name: '', isActive: true, days: [] })
   const [showSessionForm, setShowSessionForm] = useState(false)
   const [sessionForm, setSessionForm] = useState<Session>({ id: '', date: new Date().toISOString(), exercises: [] })
+  const [sessionDayNumber, setSessionDayNumber] = useState<number | undefined>(undefined)
+  const [sessionPrescription, setSessionPrescription] = useState<TrainingDay | null>(null)
   const [showQuestionnaire, setShowQuestionnaire] = useState(false)
   const [qForm, setQForm] = useState<Record<string, number>>({})
   const [qNotes, setQNotes] = useState('')
@@ -364,8 +366,11 @@ export default function ClientDetail({ clientId }: Props) {
 
   // Session helpers
   const startSession = (dayIdx: number) => {
-    const day = client?.trainings.find(t => t.isActive)?.days[dayIdx]
+    const activeTraining = client?.trainings.find(t => t.isActive)
+    const day = activeTraining?.days[dayIdx]
     if (!day) return
+    setSessionDayNumber(day.dayNumber)
+    setSessionPrescription(day)
     setSessionForm({
       id: '', date: new Date().toISOString(),
       exercises: day.exercises.map((e) => ({
@@ -374,6 +379,13 @@ export default function ClientDetail({ clientId }: Props) {
         sets: Array.from({ length: e.prescribedSets || 3 }, (_, i) => ({ setNumber: i + 1 })),
       })),
     })
+    setShowSessionForm(true)
+  }
+
+  const openBlankSession = () => {
+    setSessionDayNumber(undefined)
+    setSessionPrescription(null)
+    setSessionForm({ id: '', date: new Date().toISOString(), exercises: [{ exerciseName: '', order: 0, sets: [{ setNumber: 1 }] }] })
     setShowSessionForm(true)
   }
 
@@ -399,6 +411,7 @@ export default function ClientDetail({ clientId }: Props) {
       await apiPost('/api/sessions', {
         clientId,
         trainingId: activeTraining?.id,
+        dayNumber: sessionDayNumber,
         notes: sessionForm.notes,
         rpe: sessionForm.rpe,
         exercises: sessionForm.exercises.map((e) => ({
@@ -415,6 +428,8 @@ export default function ClientDetail({ clientId }: Props) {
       })
       setShowSessionForm(false)
       setSessionForm({ id: '', date: new Date().toISOString(), exercises: [] })
+      setSessionDayNumber(undefined)
+      setSessionPrescription(null)
       reloadClient()
     } catch {}
   }
@@ -797,17 +812,64 @@ export default function ClientDetail({ clientId }: Props) {
 
         {/* SESSIONS TAB */}
       {activeTab === 'sessions' && <div className="space-y-6 mt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-lg font-medium text-[#334155]">Sesiones registradas</h2>
-            {(isAdmin || user?.role === 'client') && (
-              <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={() => {
-                setSessionForm({ id: '', date: new Date().toISOString(), exercises: [{ exerciseName: '', order: 0, sets: [{ setNumber: 1 }] }] })
-                setShowSessionForm(true)
-              }}>
+            {isAdmin && (
+              <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={openBlankSession}>
                 <Plus className="h-4 w-4 mr-1.5" /> Nueva sesión
               </Button>
             )}
           </div>
+
+          {/* Client: Training day selector to start a session */}
+          {!isAdmin && client.trainings?.length > 0 && (
+            <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#0E7490' }}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-[#334155] flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-[#0E7490]" />
+                  Registrar sesión de hoy
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground mb-3">Selecciona el día de tu plan para registrar los datos del entrenamiento:</p>
+                {(() => {
+                  const activeDays = client.trainings.find(t => t.isActive)?.days
+                  if (!activeDays?.length) return <p className="text-xs text-muted-foreground">No hay plan de entrenamiento activo</p>
+                  return (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {activeDays.map((day, dayIdx) => (
+                        <button
+                          key={day.id || dayIdx}
+                          onClick={() => startSession(dayIdx)}
+                          className="border rounded-lg p-4 text-left hover:border-[#0E7490] hover:bg-[#0E7490]/5 transition-all group"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#334155]">{day.dayName || `Día ${day.dayNumber}`}</span>
+                            <span className="text-[10px] text-muted-foreground">{day.exercises.length} ej.</span>
+                          </div>
+                          <div className="space-y-1">
+                            {day.exercises.slice(0, 4).map((ex, i) => (
+                              <div key={i} className="text-xs text-muted-foreground flex justify-between">
+                                <span className="truncate">{ex.exerciseName}</span>
+                                <span className="shrink-0 ml-2">{ex.prescribedSets}×{ex.prescribedReps}</span>
+                              </div>
+                            ))}
+                            {day.exercises.length > 4 && (
+                              <p className="text-[10px] text-muted-foreground">+{day.exercises.length - 4} más...</p>
+                            )}
+                          </div>
+                          <div className="mt-3 flex items-center gap-1.5 text-xs text-[#0E7490] opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Plus className="h-3 w-3" /> Registrar
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
           {!client.sessions?.length ? (
             <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">No hay sesiones registradas</CardContent></Card>
           ) : (
@@ -989,46 +1051,89 @@ export default function ClientDetail({ clientId }: Props) {
       </Dialog>
 
       {/* Session Logger Dialog */}
-      <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
+      <Dialog open={showSessionForm} onOpenChange={(open) => {
+        if (!open) {
+          setShowSessionForm(false)
+          setSessionPrescription(null)
+          setSessionDayNumber(undefined)
+        }
+      }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Registrar sesión</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-light tracking-wider">
+              Registrar sesión
+              {sessionPrescription && (
+                <span className="text-sm text-muted-foreground ml-2 font-normal">
+                  — {sessionPrescription.dayName || `Día ${sessionDayNumber}`}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            {sessionForm.exercises.map((ex, exIdx) => (
-              <div key={exIdx} className="border rounded-lg p-3 space-y-2">
-                <p className="text-sm font-medium text-[#334155]">{ex.exerciseName || `Ejercicio ${exIdx + 1}`}</p>
-                {isAdmin && (
-                  <Input value={ex.exerciseName} onChange={(e) => {
-                    const exercises = [...sessionForm.exercises]
-                    exercises[exIdx] = {...exercises[exIdx], exerciseName: e.target.value}
-                    setSessionForm({...sessionForm, exercises})
-                  }} className="h-8 text-sm" placeholder="Nombre del ejercicio" />
-                )}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead><tr className="text-muted-foreground"><th className="pb-1 text-left w-12">#</th><th className="pb-1 text-left">Reps</th><th className="pb-1 text-left">Kg</th><th className="pb-1 text-left">RIR</th></tr></thead>
-                    <tbody>
-                      {ex.sets.map((set, setIdx) => (
-                        <tr key={setIdx}>
-                          <td className="py-1 text-muted-foreground">{set.setNumber}</td>
-                          <td className="py-1"><Input type="number" value={set.reps || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
-                          <td className="py-1"><Input type="number" step="0.5" value={set.weight || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
-                          <td className="py-1"><Input type="number" value={set.rir || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'rir', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {sessionForm.exercises.map((ex, exIdx) => {
+              const prescribed = sessionPrescription?.exercises[exIdx]
+              return (
+                <div key={exIdx} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-[#334155]">{ex.exerciseName || `Ejercicio ${exIdx + 1}`}</p>
+                    {prescribed && (
+                      <Badge variant="outline" className="text-[10px] shrink-0 border-[#0E7490]/30 text-[#0E7490]">
+                        {prescribed.prescribedSets}×{prescribed.prescribedReps}
+                        {prescribed.prescribedRir ? ` RIR ${prescribed.prescribedRir}` : ''}
+                      </Badge>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <Input value={ex.exerciseName} onChange={(e) => {
+                      const exercises = [...sessionForm.exercises]
+                      exercises[exIdx] = {...exercises[exIdx], exerciseName: e.target.value}
+                      setSessionForm({...sessionForm, exercises})
+                    }} className="h-8 text-sm" placeholder="Nombre del ejercicio" />
+                  )}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-muted-foreground">
+                        <th className="pb-1 text-left w-10">#</th>
+                        <th className="pb-1 text-left w-16">Reps</th>
+                        <th className="pb-1 text-left w-16">Kg</th>
+                        <th className="pb-1 text-left w-16">RIR</th>
+                        <th className="pb-1 text-left w-16">RPE</th>
+                      </tr></thead>
+                      <tbody>
+                        {ex.sets.map((set, setIdx) => (
+                          <tr key={setIdx}>
+                            <td className="py-1 text-muted-foreground font-medium">{set.setNumber}</td>
+                            <td className="py-1"><Input type="number" value={set.reps || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" placeholder="—" /></td>
+                            <td className="py-1"><Input type="number" step="0.5" value={set.weight || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || undefined)} className="h-7 w-16 text-xs" placeholder="—" /></td>
+                            <td className="py-1"><Input type="number" value={set.rir || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'rir', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" placeholder="—" /></td>
+                            <td className="py-1"><Input type="number" min={1} max={10} value={set.rpe || ''} onChange={(e) => updateSessionSet(exIdx, setIdx, 'rpe', parseInt(e.target.value) || undefined)} className="h-7 w-16 text-xs" placeholder="—" /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => addSetToExercise(exIdx)}><Plus className="h-3 w-3 mr-1" /> Añadir serie</Button>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => addSetToExercise(exIdx)}><Plus className="h-3 w-3 mr-1" /> Serie</Button>
-              </div>
-            ))}
+              )
+            })}
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => {
+                setSessionForm({
+                  ...sessionForm,
+                  exercises: [...sessionForm.exercises, { exerciseName: '', order: sessionForm.exercises.length, sets: [{ setNumber: 1 }] }]
+                })
+              }}><Plus className="h-3.5 w-3.5 mr-1" /> Añadir ejercicio</Button>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs uppercase">RPE sesión (1-10)</Label><Input type="number" min={1} max={10} value={sessionForm.rpe || ''} onChange={(e) => setSessionForm(f => ({...f, rpe: parseFloat(e.target.value) || undefined}))} className="mt-1" /></div>
               <div><Label className="text-xs uppercase">Notas</Label><Textarea value={sessionForm.notes || ''} onChange={(e) => setSessionForm(f => ({...f, notes: e.target.value}))} className="mt-1" rows={2} /></div>
             </div>
           </div>
           <div className="flex gap-3 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setShowSessionForm(false)}>Cancelar</Button>
-            <Button onClick={saveSession} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">Guardar sesión</Button>
+            <Button variant="ghost" onClick={() => { setShowSessionForm(false); setSessionPrescription(null); setSessionDayNumber(undefined) }}>Cancelar</Button>
+            <Button onClick={saveSession} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">
+              <Save className="h-4 w-4 mr-1.5" /> Guardar sesión
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1087,7 +1192,7 @@ function SessionCard({ session }: { session: Session }) {
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-sm font-medium">{date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-              <p className="text-xs text-muted-foreground">{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}{session.totalVolume ? ` · ${Math.round(session.totalVolume).toLocaleString()} kg vol.` : ''}</p>
+              <p className="text-xs text-muted-foreground">{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}{session.totalVolume ? ` · ${Math.round(session.totalVolume).toLocaleString()} kg vol.` : ''}{session.dayNumber ? ` · Día ${session.dayNumber}` : ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1103,7 +1208,7 @@ function SessionCard({ session }: { session: Session }) {
                 <div className="flex flex-wrap gap-1">
                   {ex.sets.map((s, j) => (
                     <span key={j} className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
-                      {s.reps}×{s.weight || '?'}kg{s.rir != null ? ` RIR${s.rir}` : ''}
+                      {s.reps}×{s.weight || '?'}kg{s.rir != null ? ` RIR${s.rir}` : ''}{s.rpe != null ? ` RPE${s.rpe}` : ''}
                     </span>
                   ))}
                   {ex.volume != null && <span className="text-[10px] text-muted-foreground ml-1">Vol: {Math.round(ex.volume)}kg</span>}

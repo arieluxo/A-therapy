@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import {
   LayoutDashboard,
   Users,
-  Dumbbell,
   Settings,
   LogOut,
   Menu,
@@ -15,13 +14,13 @@ import {
   ClipboardList,
   Activity,
   TrendingUp,
+  Dumbbell,
 } from 'lucide-react'
 import Image from 'next/image'
 
 const adminNavItems: { view: View; label: string; icon: React.ReactNode }[] = [
   { view: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
   { view: 'clients', label: 'Clientes', icon: <Users className="h-5 w-5" /> },
-  { view: 'exercises', label: 'Ejercicios', icon: <Dumbbell className="h-5 w-5" /> },
   { view: 'admin', label: 'Administración', icon: <Settings className="h-5 w-5" /> },
 ]
 

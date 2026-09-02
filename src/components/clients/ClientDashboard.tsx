@@ -116,6 +116,25 @@ export default function ClientDashboard() {
         <p className="text-sm text-muted-foreground mt-1">Aquí tienes tu resumen de entrenamiento</p>
       </div>
 
+      {/* Quick action: Register today's session */}
+      {activeTraining && (
+        <button
+          onClick={() => navigateTo('client-sessions')}
+          className="w-full bg-[#0E7490] hover:bg-[#0C5E74] text-white rounded-lg p-4 flex items-center justify-between transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+              <Activity className="h-5 w-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-medium">Registrar sesión de hoy</p>
+              <p className="text-xs text-white/70">Selecciona tu día de entrenamiento y rellena los datos</p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 shadow-sm">
