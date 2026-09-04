@@ -3,6 +3,20 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP1 — 2026-09-05 — Vinculación GitHub + push
+- **Qué cambió**: `git remote add origin → github.com/arieluxo/A-therapy`,
+  push forzado de `main` (historias no relacionadas: el remoto solo tenía
+  `Index.html`). Tracking `main → origin/main` configurado.
+- **Comprobado**: `git push --force-with-lease` → `bf34aad...3f07c77
+  main -> main (forced update)`. Sin secretos en lo pusheado (`.env` del
+  historial solo contiene `DATABASE_URL` de contenedor; la BD incluye solo
+  datos de prueba: admin seed + cliente "Charlie" + 2 sesiones).
+- **Pendiente**: verificar deploy auto de Vercel (`a-therapy-seven`); definir
+  `DATABASE_URL`/`JWT_SECRET` en Vercel; migrar SQLite → Postgres.
+- **Commit**: `3f07c77 chore: estabilización base + docs (CP0)` (pusheado).
+- **Próximo paso**: comprobar Vercel y sanear `.env` local (apunta a ruta
+  Linux `/home/z/...` inexistente en Windows).
+
 ## CP0 — 2026-09-05 — Análisis + estabilización base
 - **Qué cambió**: nada funcional. Solo tooling + docs + higiene de repo
   (ver CHANGELOG). `docs/`, `.env.example`, `.gitignore`, scripts `build`.
