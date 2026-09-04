@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -52,3 +53,15 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# sqlite databases (local dev only, never commit real client data)
+*.db
+*.db-journal
+*.sqlite
+db/*.db
+
+# local process files
+.zscripts/dev.pid
+
+# agent tool outputs
+/tool-results/
