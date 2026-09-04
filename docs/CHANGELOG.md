@@ -2,6 +2,17 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Fix 404 Vercel: quitar `output standalone` (CP3)
+- Causa del 404: `next.config.ts` tenía `output: "standalone"` (pensado para
+  self-host Caddy). El builder de Vercel generaba deployments READY pero sin
+  rutas servibles (edge devolvía 404 vacío).
+- `next.config.ts`: eliminado `output: "standalone"` (con comentario).
+- `package.json`: eliminados scripts `build:standalone` y `start` (dependían
+  del modo standalone; despliegue canónico = Vercel).
+- Vercel vía API/CLI con token: desactivado `ssoProtection` (muro de login),
+  creado `JWT_SECRET` aleatorio (production/preview/development), redeploy.
+- Verificado: `bun run build` OK · `eslint` OK.
+
 ## 2026-09-05 — Fix deploy Vercel: `postinstall prisma generate` (CP2)
 - `package.json`: añadido `"postinstall": "prisma generate"`. Sin esto, la
   instalación fresca de Vercel dejaba `@prisma/client` sin generar y todas

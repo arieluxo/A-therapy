@@ -3,6 +3,17 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP3 — 2026-09-05 — Fix 404 Vercel (quitar output standalone)
+- **Causa raíz**: `output: "standalone"` en `next.config.ts` → deployments
+  READY pero edge con 404 vacío. Además `ssoProtection` tapaba todo con login.
+- **Qué cambió**: `next.config.ts` sin `output`; `package.json` sin scripts
+  standalone; `JWT_SECRET` creado en Vercel (3 envs); `ssoProtection: null`.
+- **Comprobado**: build local OK · eslint OK · push dispara rebuild en Vercel.
+- **Pendiente**: verificar site tras rebuild; `DATABASE_URL` en Vercel
+  (SQLite no viable en serverless → migrar a Postgres); revocar token Vercel.
+- **Commit**: pendiente (`fix: quitar output standalone para Vercel`).
+- **Próximo paso**: push → esperar build → verificar HTTP 200 + login.
+
 ## CP2 — 2026-09-05 — Fix deploy Vercel (postinstall prisma)
 - **Qué cambió**: solo `package.json` (+`postinstall`) y CHANGELOG.
 - **Comprobado**: `bun run build` OK (13 rutas) · `eslint` OK · diff revisado.
