@@ -2,6 +2,15 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Site UP en Vercel (CP4, sin cambios de código)
+- Causa real del 404: `framework: null` en el proyecto → Vercel desplegaba
+  en modo estático (solo `public/`, sin `.next`). Fix vía API: `framework:
+  "nextjs"` + redeploy → `/` 200 (11 KB, título A-THERAPY), `/api` 200.
+- Antes: desprotegido el site (`ssoProtection: null`, pedía login Vercel) y
+  creado `JWT_SECRET` aleatorio en Vercel (production/preview/development).
+- `/api/auth/login` aún devuelve 500: no hay `DATABASE_URL` en Vercel
+  (SQLite no viable en serverless). Siguiente paso: Postgres.
+
 ## 2026-09-05 — Fix 404 Vercel: quitar `output standalone` (CP3)
 - Causa del 404: `next.config.ts` tenía `output: "standalone"` (pensado para
   self-host Caddy). El builder de Vercel generaba deployments READY pero sin

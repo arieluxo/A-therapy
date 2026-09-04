@@ -3,6 +3,17 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP4 — 2026-09-05 — Site UP (causa real: framework null)
+- **Corrección a CP3**: lo de `standalone` no era la causa. La causa real era
+  `framework: null` en el proyecto Vercel → deploy estático (lambda con
+  entrypoint `.` y output vacío; solo servía `public/`). Evidencia: build OK
+  en logs, `/logo.png` 200 pero `/` y `/api` 404, sin logs de función.
+- **Fix**: `framework: "nextjs"` vía API + redeploy → `/` 200 + `/api` 200.
+- **Comprobado**: título "A-THERAPY | Training Platform" en producción.
+  `/api/auth/login` → 500 (falta `DATABASE_URL`; pendiente Postgres).
+- **Pendiente**: Postgres + `DATABASE_URL` en Vercel; revocar token Vercel.
+- **Próximo paso**: crear Postgres (dashboard o Neon) → set env → migrate.
+
 ## CP3 — 2026-09-05 — Fix 404 Vercel (quitar output standalone)
 - **Causa raíz**: `output: "standalone"` en `next.config.ts` → deployments
   READY pero edge con 404 vacío. Además `ssoProtection` tapaba todo con login.
