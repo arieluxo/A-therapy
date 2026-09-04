@@ -3,6 +3,16 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP2 — 2026-09-05 — Fix deploy Vercel (postinstall prisma)
+- **Qué cambió**: solo `package.json` (+`postinstall`) y CHANGELOG.
+- **Comprobado**: `bun run build` OK (13 rutas) · `eslint` OK · diff revisado.
+- **Pendiente (lado Vercel, requiere dashboard)**: el dominio
+  `a-therapy-seven.vercel.app` devuelve 404 aunque GitHub está OK → casi
+  seguro que no hay deployment de producción asignado (no se disparó el
+  build, falló, o rama/dominio mal configurados). Ver checklist entregado.
+- **Commit**: pendiente (`fix: postinstall prisma generate para Vercel`).
+- **Próximo paso**: push → comprobar Deployments en Vercel → fijar env vars.
+
 ## CP1 — 2026-09-05 — Vinculación GitHub + push
 - **Qué cambió**: `git remote add origin → github.com/arieluxo/A-therapy`,
   push forzado de `main` (historias no relacionadas: el remoto solo tenía

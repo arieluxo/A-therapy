@@ -2,6 +2,12 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Fix deploy Vercel: `postinstall prisma generate` (CP2)
+- `package.json`: añadido `"postinstall": "prisma generate"`. Sin esto, la
+  instalación fresca de Vercel dejaba `@prisma/client` sin generar y todas
+  las rutas API fallaban en runtime.
+- Verificado: `bun run build` OK · `eslint` OK.
+
 ## 2026-09-05 — Estabilización base + tooling (checkpoint 0)
 - Instalado tooling Windows vía winget: Git 2.55, Node 24 (LTS), Bun 1.4.
 - `bun install`: 834 paquetes, sin errores.
