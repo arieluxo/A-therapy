@@ -2,6 +2,13 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Fix: recargar expulsaba al login (CP7)
+- Causa: `getInitial()` en `useStore` era código muerto — el store arrancaba
+  siempre con `user/token: null` aunque hubiera sesión en `localStorage`.
+- `src/store/useStore.ts`: `loadStoredSession()` hidrata token+user al cargar
+  (con `try/catch` y guarda SSR); vista inicial `client-home` si es cliente.
+- Verificado: `eslint` + `next build` OK.
+
 ## 2026-09-05 — Migración SQLite → Postgres Neon (CP6)
 - `prisma/schema.prisma`: `provider postgresql` + `directUrl`.
 - Tablas creadas en Neon con `prisma db push` (verificado "in sync").

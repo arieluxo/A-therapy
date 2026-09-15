@@ -41,18 +41,25 @@ interface AppState {
   setSidebarOpen: (open: boolean) => void
 }
 
-const getInitial = () => {
+function loadStoredSession(): { token: string | null; user: UserInfo | null } {
   if (typeof window === 'undefined') return { token: null, user: null }
-  return {
-    token: localStorage.getItem('at-token'),
-    user: JSON.parse(localStorage.getItem('at-user') || 'null'),
+  try {
+    const token = localStorage.getItem('at-token')
+    const raw = localStorage.getItem('at-user')
+    return { token, user: raw ? (JSON.parse(raw) as UserInfo) : null }
+  } catch {
+    return { token: null, user: null }
   }
 }
 
+// Se evalúa al cargar el módulo en el cliente: restaura la sesión
+// guardada para que recargar la página no expulse al login.
+const stored = loadStoredSession()
+
 export const useStore = create<AppState>((set) => ({
-  view: 'dashboard',
-  user: null,
-  token: null,
+  view: stored.user?.role === 'client' ? 'client-home' : 'dashboard',
+  user: stored.user,
+  token: stored.token,
   selectedClientId: null,
   sidebarOpen: false,
 

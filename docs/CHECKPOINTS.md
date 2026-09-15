@@ -3,6 +3,14 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP7 — 2026-09-05 — Fix persistencia de sesión
+- **Síntoma**: recargar la web expulsaba al login.
+- **Causa**: store sin hidratar desde `localStorage` (código muerto).
+- **Comprobado**: lint + build OK · diff mínimo (1 archivo + docs).
+- **Nota**: con sesión ya guardada en el navegador, basta recargar tras el
+  deploy — no hace falta volver a loguearse (salvo token expirado 7d).
+- **Commit**: pendiente (`fix: hidratar sesion al cargar`).
+
 ## CP6 — 2026-09-05 — Migración a Postgres Neon
 - **Qué cambió**: schema a `postgresql`; env vars en Vercel; untrack `.env`
   y `db/custom.db`; `.env.example` Postgres.
