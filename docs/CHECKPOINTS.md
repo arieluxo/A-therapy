@@ -9,6 +9,10 @@ qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 - **Comprobado**: `db push` in sync · generate/build/eslint OK · diff revisado
   (sin secretos: el `.env` con credenciales queda fuera del commit).
 - **Pendiente**: seed admin en prod + verificar login 200 tras rebuild.
+- **Verificado en prod**: seed → "Admin already exists" (auto-seed del
+  AppShell); `POST /api/auth/login admin@atherapy.com/admin123` → **200,
+  role=admin + JWT**. Acceso total operativo en
+  https://a-therapy-seven.vercel.app.
 - **Commit**: pendiente (`feat: migracion a Postgres Neon`).
 
 ## CP5 — 2026-09-05 — Login muestra el error real
