@@ -2,6 +2,12 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Login muestra el error real (CP5)
+- `LoginForm`: antes mostraba "Credenciales incorrectas" ante CUALQUIER fallo
+  (incluido 500 por BD caída) — eso ocultaba la causa real. Ahora muestra el
+  mensaje del servidor (p. ej. "Error del servidor: base de datos no
+  disponible" en 500).
+
 ## 2026-09-05 — Site UP en Vercel (CP4, sin cambios de código)
 - Causa real del 404: `framework: null` en el proyecto → Vercel desplegaba
   en modo estático (solo `public/`, sin `.next`). Fix vía API: `framework:

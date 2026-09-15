@@ -24,8 +24,21 @@ export default function LoginForm() {
     try {
       const data = await apiPost('/api/auth/login', { email, password })
       login(data.token, data.user)
-    } catch {
-      setError('Credenciales incorrectas')
+    } catch (e) {
+      let msg = 'Credenciales incorrectas'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { status?: number; error?: string }
+          if (parsed.status === 500) {
+            msg = 'Error del servidor: base de datos no disponible'
+          } else if (parsed.error && parsed.status !== 401) {
+            msg = parsed.error
+          }
+        } catch {
+          if (e.message !== 'Unauthorized') msg = e.message
+        }
+      }
+      setError(msg)
     } finally {
       setLoading(false)
     }
