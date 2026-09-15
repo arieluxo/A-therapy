@@ -2,6 +2,15 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Migración SQLite → Postgres Neon (CP6)
+- `prisma/schema.prisma`: `provider postgresql` + `directUrl`.
+- Tablas creadas en Neon con `prisma db push` (verificado "in sync").
+- Vercel: `DATABASE_URL` = pooled + `pgbouncer=true&connection_limit=1`
+  (Prisma lo exige con pooler en modo transacción); `DIRECT_URL` = directa.
+- `.env` y `db/custom.db` dejan de versionarse (`git rm --cached`; los
+  archivos siguen en local). `.env.example` actualizado a plantilla Postgres.
+- Verificado: `prisma generate` + `next build` + `eslint` OK.
+
 ## 2026-09-05 — Login muestra el error real (CP5)
 - `LoginForm`: antes mostraba "Credenciales incorrectas" ante CUALQUIER fallo
   (incluido 500 por BD caída) — eso ocultaba la causa real. Ahora muestra el

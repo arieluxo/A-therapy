@@ -3,6 +3,14 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP6 — 2026-09-05 — Migración a Postgres Neon
+- **Qué cambió**: schema a `postgresql`; env vars en Vercel; untrack `.env`
+  y `db/custom.db`; `.env.example` Postgres.
+- **Comprobado**: `db push` in sync · generate/build/eslint OK · diff revisado
+  (sin secretos: el `.env` con credenciales queda fuera del commit).
+- **Pendiente**: seed admin en prod + verificar login 200 tras rebuild.
+- **Commit**: pendiente (`feat: migracion a Postgres Neon`).
+
 ## CP5 — 2026-09-05 — Login muestra el error real
 - **Qué cambió**: `LoginForm.tsx` (catch muestra causa real) + CHANGELOG.
 - **Comprobado**: login local `admin@atherapy.com/admin123` → 200 + JWT
