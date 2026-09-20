@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyPassword, createToken, authCookieOptions } from '@/lib/auth'
 import { loginSchema, firstZodMessage } from '@/lib/validation'
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       clientId: realClientId ?? undefined,
     })
 
-    const res = Response.json({
+    const res = NextResponse.json({
       token,
       user: {
         id: user.id,

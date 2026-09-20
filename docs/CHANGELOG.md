@@ -14,6 +14,8 @@ Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 - `next.config`: headers `nosniff`, `DENY` frame, `Referrer-Policy`,
   `Permissions-Policy` mínima. Prisma solo loguea queries en dev.
 - Verificado: `eslint` + `next build` OK; login local 200 + cookie.
+- Fix post-deploy: `Response.json` no expone `.cookies` → `NextResponse.json`
+  en login/logout (detectado por log `TypeError ... reading 'set'`).
 
 ## 2026-09-05 — Fix: recargar expulsaba al login (CP7)
 - Causa: `getInitial()` en `useStore` era código muerto — el store arrancaba
