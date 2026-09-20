@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserFromRequest, hashPassword } from '@/lib/auth'
+import { userCreateSchema, firstZodMessage } from '@/lib/validation'
 
 export async function GET(req: NextRequest) {
   try {
@@ -46,11 +47,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { email, password, name, role } = body
-
-    if (!email || !password || !name) {
-      return Response.json({ error: 'Email, contraseña y nombre son obligatorios' }, { status: 400 })
+    const parsed = userCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: firstZodMessage(parsed.error) }, { status: 400 })
     }
+    const { email, password, name, role } = parsed.data
 
     const existingUser = await db.user.findUnique({ where: { email } })
     if (existingUser) {

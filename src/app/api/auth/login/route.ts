@@ -1,15 +1,23 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyPassword, createToken } from '@/lib/auth'
+import { verifyPassword, createToken, authCookieOptions } from '@/lib/auth'
+import { loginSchema, firstZodMessage } from '@/lib/validation'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { email, password } = body
-
-    if (!email || !password) {
-      return Response.json({ error: 'Email y contraseña son obligatorios' }, { status: 400 })
+    // Anti-fuerza-bruta: 10 intentos / 15 min por IP (mitigación básica)
+    const rl = rateLimit(`login:${clientIp(req)}`, 10, 15 * 60 * 1000)
+    if (!rl.ok) {
+      return Response.json({ error: 'Demasiados intentos. Prueba en unos minutos.' }, { status: 429 })
     }
+
+    const body = await req.json()
+    const parsed = loginSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: firstZodMessage(parsed.error) }, { status: 400 })
+    }
+    const { email, password } = parsed.data
 
     const user = await db.user.findUnique({
       where: { email },
@@ -41,7 +49,7 @@ export async function POST(req: NextRequest) {
       clientId: realClientId ?? undefined,
     })
 
-    return Response.json({
+    const res = Response.json({
       token,
       user: {
         id: user.id,
@@ -51,6 +59,10 @@ export async function POST(req: NextRequest) {
         clientId: realClientId,
       },
     })
+    // Cookie httpOnly: el navegador la envía sola; el token en el body se
+    // mantiene por compatibilidad con sesiones ya guardadas en localStorage.
+    res.cookies.set('at-token', token, authCookieOptions())
+    return res
   } catch (error) {
     console.error('Login error:', error)
     return Response.json({ error: 'Error interno del servidor' }, { status: 500 })

@@ -3,6 +3,12 @@ import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
+  // Bootstrap desactivado por defecto: permitir crear el primer admin sin
+  // autenticación es un riesgo. Activar solo puntualmente con
+  // ALLOW_SEED=true y volver a desactivar después.
+  if (process.env.ALLOW_SEED !== 'true') {
+    return Response.json({ error: 'Seed deshabilitado' }, { status: 403 })
+  }
   try {
     const existingAdmin = await db.user.findFirst({
       where: { role: 'admin' },

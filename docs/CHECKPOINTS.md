@@ -3,6 +3,16 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP8 — 2026-09-05 — Bloque seguridad
+- **Qué cambió**: rate-limit, zod, cookie httpOnly, logout con limpieza,
+  seed desactivado, roles restringidos, headers, logs Prisma.
+- **Comprobado**: lint + build OK · login local 200 + `Set-Cookie at-token`.
+- **Incidencia aparte**: el admin de prod tenía la password cambiada (no era
+  `admin123`; había un cliente `ariel@prueba.com` creado desde dentro). Reset
+  a `admin123` + login prod 200 verificado. El usuario debe cambiarla.
+- **Pendiente**: commit + push + deploy; el usuario cambia su password.
+- **Commit**: pendiente (`feat: bloque seguridad CP8`).
+
 ## CP7 — 2026-09-05 — Fix persistencia de sesión
 - **Síntoma**: recargar la web expulsaba al login.
 - **Causa**: store sin hidratar desde `localStorage` (código muerto).

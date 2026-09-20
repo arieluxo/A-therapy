@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserFromRequest, hashPassword, createToken } from '@/lib/auth'
+import { clientCreateSchema, firstZodMessage } from '@/lib/validation'
 
 function computeClientStatus(
   latestQuestionnaire: { overallScore: number | null } | null,
@@ -100,11 +101,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, email, password, age, height, weight, goal, experienceLevel, injuries, weeklyAvailability, notes } = body
-
-    if (!name || !email || !password) {
-      return Response.json({ error: 'Nombre, email y contraseña son obligatorios' }, { status: 400 })
+    const parsed = clientCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: firstZodMessage(parsed.error) }, { status: 400 })
     }
+    const { name, email, password, age, height, weight, goal, experienceLevel, injuries, weeklyAvailability, notes } = parsed.data
 
     const existingUser = await db.user.findUnique({ where: { email } })
     if (existingUser) {

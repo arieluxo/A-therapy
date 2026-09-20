@@ -70,8 +70,18 @@ export const useStore = create<AppState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('at-token')
-    localStorage.removeItem('at-user')
+    // Limpia también la cookie httpOnly en el servidor (sin bloquear la UI)
+    try {
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
+    } catch {
+      /* noop */
+    }
+    try {
+      localStorage.removeItem('at-token')
+      localStorage.removeItem('at-user')
+    } catch {
+      /* noop */
+    }
     set({ token: null, user: null, view: 'login', selectedClientId: null })
   },
 

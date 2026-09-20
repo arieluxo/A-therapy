@@ -5,6 +5,15 @@ async function getToken(): Promise<string | null> {
   return useStore.getState().token || localStorage.getItem('at-token')
 }
 
+function baseInit(token: string | null, extra: RequestInit = {}): RequestInit {
+  return {
+    ...extra,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    // Envía la cookie httpOnly de sesión cuando exista
+    credentials: 'include',
+  }
+}
+
 function handleResponse(res: Response): Promise<unknown> {
   if (res.status === 401) {
     useStore.getState().logout()
@@ -24,37 +33,30 @@ function handleResponse(res: Response): Promise<unknown> {
 export async function apiGet(url: string, params?: Record<string, string>) {
   const token = await getToken()
   const q = params ? '?' + new URLSearchParams(params).toString() : ''
-  const res = await fetch(url + q, {
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-  })
+  const res = await fetch(url + q, baseInit(token))
   return handleResponse(res)
 }
 
 export async function apiPost(url: string, body?: unknown) {
   const token = await getToken()
-  const res = await fetch(url, {
+  const res = await fetch(url, baseInit(token, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
-  })
+  }))
   return handleResponse(res)
 }
 
 export async function apiPut(url: string, body?: unknown) {
   const token = await getToken()
-  const res = await fetch(url, {
+  const res = await fetch(url, baseInit(token, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
-  })
+  }))
   return handleResponse(res)
 }
 
 export async function apiDelete(url: string) {
   const token = await getToken()
-  const res = await fetch(url, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-  })
+  const res = await fetch(url, baseInit(token, { method: 'DELETE' }))
   return handleResponse(res)
 }

@@ -2,6 +2,19 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Bloque seguridad (CP8)
+- `POST /api/auth/login`: rate-limit 10 intentos/15min por IP (429), validación
+  zod, cookie de sesión `httpOnly` (+ token en body por compatibilidad).
+- `POST /api/auth/logout` (nuevo): limpia la cookie; logout del store la llama.
+- `POST /api/auth/seed`: desactivado salvo `ALLOW_SEED=true`.
+- `POST /api/clients` y `POST /api/users`: validación zod (email, pass ≥8,
+  rol restringido a `admin|client` — antes cualquier rol caía en admin).
+- `lib/auth`: la cookie se prefiere al Bearer; `JWT_SECRET` obligatorio en prod.
+- `lib/api`: `credentials: 'include'` en todas las peticiones.
+- `next.config`: headers `nosniff`, `DENY` frame, `Referrer-Policy`,
+  `Permissions-Policy` mínima. Prisma solo loguea queries en dev.
+- Verificado: `eslint` + `next build` OK; login local 200 + cookie.
+
 ## 2026-09-05 — Fix: recargar expulsaba al login (CP7)
 - Causa: `getInitial()` en `useStore` era código muerto — el store arrancaba
   siempre con `user/token: null` aunque hubiera sesión en `localStorage`.
