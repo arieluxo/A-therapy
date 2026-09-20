@@ -8,7 +8,7 @@ function computeClientStatus(
   lastSession: { date: Date } | null
 ): string {
   const now = new Date()
-  const score = latestQuestionnaire?.overallScore
+  const score = latestQuestionnaire?.overallScore ?? null
   const daysSinceSession = lastSession
     ? Math.floor((now.getTime() - new Date(lastSession.date).getTime()) / (1000 * 60 * 60 * 24))
     : null

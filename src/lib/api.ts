@@ -14,7 +14,7 @@ function baseInit(token: string | null, extra: RequestInit = {}): RequestInit {
   }
 }
 
-function handleResponse(res: Response): Promise<unknown> {
+function handleResponse(res: Response): Promise<any> {
   if (res.status === 401) {
     useStore.getState().logout()
     throw new Error('Unauthorized')

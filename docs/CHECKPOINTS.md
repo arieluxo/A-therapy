@@ -3,6 +3,13 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP9/CP10 — 2026-09-05 — Estética + tsc a cero
+- **Comprobado**: `tsc` 0 errores (antes 47) · `eslint` OK · `next build` OK
+  (13 rutas) · exports `Avatar/AvatarFallback` verificados.
+- **Sin verificar visualmente** (sin navegador aquí): modo oscuro, toggle,
+  avatar y skeletons — pedir revisión visual al usuario con capturas.
+- **Commits**: pendientes (`estetica CP9` + `calidad CP10`), un solo push.
+
 ## CP8 — 2026-09-05 — Bloque seguridad
 - **Qué cambió**: rate-limit, zod, cookie httpOnly, logout con limpieza,
   seed desactivado, roles restringidos, headers, logs Prisma.

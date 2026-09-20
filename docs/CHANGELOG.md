@@ -2,6 +2,24 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-05 — Estética: tokens de marca + modo oscuro (CP9)
+- `globals.css`: tokens `--brand/--brand-deep/--brand-bright/--ink` (+ paleta
+  `.dark` completa); body usa `bg-background`.
+- Clases `bg-brand/text-ink` en 11 componentes (antes ~90 hex quemados);
+  gráficos recharts usan `var(--chart-1)` (adaptan a dark).
+- Sidebar: avatar con iniciales (adiós al glitch), toggle claro/oscuro,
+  anillo cyan de marca en el logo. `ThemeProvider` en layout.
+- Dashboard y Clientes: skeletons de carga + CTA "Crear primer cliente" en
+  vacíos; badges de estado con variantes dark; botón Eliminar suavizado.
+- Decisión: se mantiene petróleo `#0E7490` como interactivo (contraste AA);
+  el cyan brillante queda para acentos/logo.
+
+## 2026-09-05 — Calidad: tsc a 0 errores (CP10)
+- `lib/api`: respuestas tipadas `any` (código ya defensivo); `tsconfig`
+  excluye `examples/`; `ClientData.user`, cast de cuestionario, `score`
+  nulable y props de `ProgressCharts` corregidos. Deuda real pendiente:
+  tipar la capa API por endpoint en vez de `any`.
+
 ## 2026-09-05 — Bloque seguridad (CP8)
 - `POST /api/auth/login`: rate-limit 10 intentos/15min por IP (429), validación
   zod, cookie de sesión `httpOnly` (+ token en body por compatibilidad).
