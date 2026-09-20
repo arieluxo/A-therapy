@@ -103,11 +103,11 @@ export default function ExerciseLibrary() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-light tracking-wider text-[#334155]">Ejercicios</h1>
+          <h1 className="text-2xl font-light tracking-wider text-ink">Ejercicios</h1>
           <p className="text-sm text-muted-foreground mt-1">{exercises.length} ejercicio{exercises.length !== 1 ? 's' : ''}</p>
         </div>
         {isAdmin && (
-          <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={openNew}>
+          <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={openNew}>
             <Plus className="h-4 w-4 mr-1.5" /> Nuevo ejercicio
           </Button>
         )}
@@ -188,7 +188,7 @@ export default function ExerciseLibrary() {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => { resetForm(); setShowForm(false) }}>Cancelar</Button>
-            <Button onClick={save} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">Guardar</Button>
+            <Button onClick={save} className="bg-brand hover:bg-brand-deep text-white">Guardar</Button>
           </div>
         </DialogContent>
       </Dialog>

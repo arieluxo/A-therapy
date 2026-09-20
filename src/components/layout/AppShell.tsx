@@ -34,7 +34,7 @@ export default function AppShell() {
     // "Inicio" shows the personalized dashboard
     if (view === 'client-home') {
       return (
-        <div className="flex min-h-screen bg-[#f5f5f5]">
+        <div className="flex min-h-screen bg-background">
           <Sidebar />
           <main className="flex-1 min-w-0">
             <div className="p-4 lg:p-8 max-w-7xl mx-auto">
@@ -49,7 +49,7 @@ export default function AppShell() {
     const clientId = user.clientId || selectedClientId
     if (clientId) {
       return (
-        <div className="flex min-h-screen bg-[#f5f5f5]">
+        <div className="flex min-h-screen bg-background">
           <Sidebar />
           <main className="flex-1 min-w-0">
             <div className="p-4 lg:p-8 max-w-7xl mx-auto">
@@ -62,7 +62,7 @@ export default function AppShell() {
 
     // Fallback to dashboard if no clientId
     return (
-      <div className="flex min-h-screen bg-[#f5f5f5]">
+      <div className="flex min-h-screen bg-background">
         <Sidebar />
         <main className="flex-1 min-w-0">
           <div className="p-4 lg:p-8 max-w-7xl mx-auto">
@@ -97,7 +97,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f5f5f5]">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 min-w-0">
         <div className="p-4 lg:p-8 max-w-7xl mx-auto">{renderView()}</div>

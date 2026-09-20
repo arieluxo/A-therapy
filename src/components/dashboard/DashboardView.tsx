@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '@/store/useStore'
 import { apiGet } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,9 +35,9 @@ interface ClientStatus {
 }
 
 const statusConfig = {
-  green: { label: 'Correcto', color: '#22c55e', bg: 'bg-green-50', border: 'border-green-200' },
-  yellow: { label: 'Revisar', color: '#eab308', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-  red: { label: 'Atención', color: '#ef4444', bg: 'bg-red-50', border: 'border-red-200' },
+  green: { label: 'Correcto', color: '#22c55e', bg: 'bg-green-50 dark:bg-green-950/50', border: 'border-green-200 dark:border-green-900' },
+  yellow: { label: 'Revisar', color: '#eab308', bg: 'bg-yellow-50 dark:bg-yellow-950/50', border: 'border-yellow-200 dark:border-yellow-900' },
+  red: { label: 'Atención', color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950/50', border: 'border-red-200 dark:border-red-900' },
 }
 
 export default function DashboardView() {
@@ -83,7 +84,7 @@ export default function DashboardView() {
               setView('client-detail')
             }
           }}
-          className="bg-[#0E7490] hover:bg-[#0C5E74]"
+          className="bg-brand hover:bg-brand-deep"
         >
           Ver mi perfil
         </Button>
@@ -94,7 +95,7 @@ export default function DashboardView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-light tracking-wider text-[#334155]">Dashboard</h1>
+        <h1 className="text-2xl font-light tracking-wider text-ink">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">Vista general de tus clientes</p>
       </div>
 
@@ -107,7 +108,7 @@ export default function DashboardView() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
                 <p className="text-3xl font-light mt-1">{total}</p>
               </div>
-              <Users className="h-8 w-8 text-[#334155]/30" />
+              <Users className="h-8 w-8 text-ink/30" />
             </div>
           </CardContent>
         </Card>
@@ -187,7 +188,7 @@ export default function DashboardView() {
               <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 Clientes
               </CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => setView('clients')}>
+              <Button variant="ghost" size="sm" className="text-xs text-ink" onClick={() => setView('clients')}>
                 Ver todos <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
@@ -195,13 +196,20 @@ export default function DashboardView() {
           <CardContent>
             <div className="space-y-2 max-h-[320px] overflow-y-auto">
               {loading ? (
-                <div className="flex items-center justify-center h-40 text-muted-foreground">
-                  <Clock className="h-5 w-5 animate-spin mr-2" /> Cargando...
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <Skeleton key={i} className="h-[68px] w-full rounded-lg" />
+                  ))}
                 </div>
               ) : clients.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No hay clientes registrados. Crea tu primer cliente para empezar.
-                </p>
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    No hay clientes registrados. Crea tu primer cliente para empezar.
+                  </p>
+                  <Button className="mt-4 bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => setView('clients')}>
+                    <Users className="h-4 w-4 mr-2" /> Crear primer cliente
+                  </Button>
+                </div>
               ) : (
                 clients.slice(0, 10).map((client) => {
                   const sc = statusConfig[client.status]
@@ -209,10 +217,10 @@ export default function DashboardView() {
                     <button
                       key={client.id}
                       onClick={() => openClient(client.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-[#0C5E74]/5 transition-colors text-left ${sc.bg} ${sc.border} border`}
+                      className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-brand-deep/5 transition-colors text-left ${sc.bg} ${sc.border} border`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#0E7490] flex items-center justify-center text-white text-xs font-medium shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-medium shrink-0">
                           {client.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div className="min-w-0">

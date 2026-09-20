@@ -124,6 +124,7 @@ interface ClientData {
   weeklyAvailability?: string
   notes?: string
   status: 'green' | 'yellow' | 'red'
+  user?: { id?: string; email?: string; role?: string; isActive?: boolean }
   trainings: Training[]
   sessions: Session[]
   questionnaires: Questionnaire[]
@@ -519,20 +520,20 @@ export default function ClientDetail({ clientId }: Props) {
         </Button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-light tracking-wider text-[#334155]">{client.name}</h1>
+            <h1 className="text-2xl font-light tracking-wider text-ink">{client.name}</h1>
             <Badge variant="outline" className="text-xs" style={{ borderColor: sc.color, color: sc.color }}>{sc.label}</Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">{client.goal || 'Sin objetivo'}{client.weight ? ` · ${client.weight} kg` : ''}</p>
         </div>
         {isAdmin && (
-          <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50" onClick={deleteClient}>
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 hover:bg-red-500/10" onClick={deleteClient}>
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
           </Button>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="bg-white shadow-sm p-1 h-auto flex-wrap gap-1 flex rounded-lg">
+      <div className="bg-card shadow-sm p-1 h-auto flex-wrap gap-1 flex rounded-lg">
         {[
           { value: 'profile', label: 'Perfil', icon: <Activity className="h-3.5 w-3.5 mr-1.5" /> },
           { value: 'training', label: 'Entrenamiento', icon: <FileText className="h-3.5 w-3.5 mr-1.5" /> },
@@ -543,7 +544,7 @@ export default function ClientDetail({ clientId }: Props) {
           <button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${activeTab === tab.value ? 'bg-[#0E7490] text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${activeTab === tab.value ? 'bg-brand text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
           >
             {tab.icon}
             {tab.label}
@@ -598,7 +599,7 @@ export default function ClientDetail({ clientId }: Props) {
                     </div>
                     <div><Label className="text-xs uppercase">Lesiones</Label><Textarea value={editForm.injuries} onChange={(e) => setEditForm(f => ({...f, injuries: e.target.value}))} className="mt-1" rows={2} /></div>
                     <div><Label className="text-xs uppercase">Disponibilidad</Label><Input value={editForm.weeklyAvailability} onChange={(e) => setEditForm(f => ({...f, weeklyAvailability: e.target.value}))} className="mt-1" /></div>
-                    <Button onClick={saveProfile} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white w-full"><Save className="h-4 w-4 mr-2" /> Guardar cambios</Button>
+                    <Button onClick={saveProfile} className="bg-brand hover:bg-brand-deep text-white w-full"><Save className="h-4 w-4 mr-2" /> Guardar cambios</Button>
                   </div>
                 ) : (
                   <dl className="space-y-3 text-sm">
@@ -632,7 +633,7 @@ export default function ClientDetail({ clientId }: Props) {
                       ) : (
                         <Badge variant="destructive" className="text-[10px]"><ShieldX className="h-3 w-3 mr-1" />Inactivo</Badge>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => { setEditCredentials(!editCredentials); setCredError(''); setCredSuccess(''); setCredForm({ email: client.user.email, password: '' }) }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setEditCredentials(!editCredentials); setCredError(''); setCredSuccess(''); setCredForm({ email: client?.user?.email ?? '', password: '' }) }}>
                         <Edit3 className="h-3.5 w-3.5 mr-1" /> {editCredentials ? 'Cancelar' : 'Editar'}
                       </Button>
                     </div>
@@ -651,7 +652,7 @@ export default function ClientDetail({ clientId }: Props) {
                         <Label className="text-xs uppercase flex items-center gap-1.5"><KeyRound className="h-3 w-3" /> Nueva contraseña <span className="text-muted-foreground normal-case">(dejar vacío para no cambiar)</span></Label>
                         <Input value={credForm.password} onChange={(e) => setCredForm(f => ({...f, password: e.target.value}))} type="password" className="mt-1" placeholder="••••••••" />
                       </div>
-                      <Button onClick={saveCredentials} disabled={savingCreds} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white w-full">
+                      <Button onClick={saveCredentials} disabled={savingCreds} className="bg-brand hover:bg-brand-deep text-white w-full">
                         {savingCreds ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                         Guardar acceso
                       </Button>
@@ -704,7 +705,7 @@ export default function ClientDetail({ clientId }: Props) {
                   <CardHeader className="pb-3"><CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notas del entrenador</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     {client.trainerNotes?.map(n => (
-                      <div key={n.id} className="text-xs border-l-2 border-[#334155] pl-3 py-1">
+                      <div key={n.id} className="text-xs border-l-2 border-ink pl-3 py-1">
                         <p>{n.content}</p>
                         <p className="text-muted-foreground mt-1">{new Date(n.createdAt).toLocaleDateString('es-ES')}</p>
                       </div>
@@ -750,9 +751,9 @@ export default function ClientDetail({ clientId }: Props) {
         {/* TRAINING TAB */}
       {activeTab === 'training' && <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-lg font-medium text-[#334155]">Programas de entrenamiento</h2>
+            <h2 className="text-lg font-medium text-ink">Programas de entrenamiento</h2>
             {isAdmin && (
-              <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setShowTrainingForm(true) }}>
+              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setShowTrainingForm(true) }}>
                 <Plus className="h-4 w-4 mr-1.5" /> Nuevo programa
               </Button>
             )}
@@ -768,7 +769,7 @@ export default function ClientDetail({ clientId }: Props) {
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-3">
                         <CardTitle className="text-sm font-medium">{t.name || `M${t.mesocycle} - S${t.week}`}</CardTitle>
-                        <Badge variant={t.isActive ? 'default' : 'secondary'} className="text-[10px]" style={t.isActive ? { backgroundColor: '#334155' } : {}}>{t.isActive ? 'Activo' : 'Inactivo'}</Badge>
+                        <Badge variant={t.isActive ? 'default' : 'secondary'} className="text-[10px]" style={t.isActive ? { backgroundColor: 'var(--brand)' } : {}}>{t.isActive ? 'Activo' : 'Inactivo'}</Badge>
                       </div>
                       {isAdmin && (
                         <div className="flex gap-1">
@@ -784,11 +785,11 @@ export default function ClientDetail({ clientId }: Props) {
                       {t.days.map((day, dayIdx) => (
                         <div key={day.id || dayIdx} className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-xs font-medium uppercase tracking-wider text-[#334155]">{day.dayName || `Día ${day.dayNumber}`}</h4>
+                            <h4 className="text-xs font-medium uppercase tracking-wider text-ink">{day.dayName || `Día ${day.dayNumber}`}</h4>
                             <span className="text-[10px] text-muted-foreground">{day.exercises.length} ej.</span>
                           </div>
                           {(isAdmin || user?.role === 'client') && (
-                            <Button variant="ghost" size="sm" className="w-full mb-2 text-xs text-[#334155]" onClick={() => startSession(dayIdx)}>
+                            <Button variant="ghost" size="sm" className="w-full mb-2 text-xs text-ink" onClick={() => startSession(dayIdx)}>
                               <Plus className="h-3 w-3 mr-1" /> Registrar sesión
                             </Button>
                           )}
@@ -813,9 +814,9 @@ export default function ClientDetail({ clientId }: Props) {
         {/* SESSIONS TAB */}
       {activeTab === 'sessions' && <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-lg font-medium text-[#334155]">Sesiones registradas</h2>
+            <h2 className="text-lg font-medium text-ink">Sesiones registradas</h2>
             {isAdmin && (
-              <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={openBlankSession}>
+              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={openBlankSession}>
                 <Plus className="h-4 w-4 mr-1.5" /> Nueva sesión
               </Button>
             )}
@@ -823,10 +824,10 @@ export default function ClientDetail({ clientId }: Props) {
 
           {/* Client: Training day selector to start a session */}
           {!isAdmin && client.trainings?.length > 0 && (
-            <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#0E7490' }}>
+            <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: 'var(--brand)' }}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-[#334155] flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-[#0E7490]" />
+                <CardTitle className="text-sm font-medium text-ink flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-brand" />
                   Registrar sesión de hoy
                 </CardTitle>
               </CardHeader>
@@ -841,10 +842,10 @@ export default function ClientDetail({ clientId }: Props) {
                         <button
                           key={day.id || dayIdx}
                           onClick={() => startSession(dayIdx)}
-                          className="border rounded-lg p-4 text-left hover:border-[#0E7490] hover:bg-[#0E7490]/5 transition-all group"
+                          className="border rounded-lg p-4 text-left hover:border-brand hover:bg-brand/5 transition-all group"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#334155]">{day.dayName || `Día ${day.dayNumber}`}</span>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-ink">{day.dayName || `Día ${day.dayNumber}`}</span>
                             <span className="text-[10px] text-muted-foreground">{day.exercises.length} ej.</span>
                           </div>
                           <div className="space-y-1">
@@ -858,7 +859,7 @@ export default function ClientDetail({ clientId }: Props) {
                               <p className="text-[10px] text-muted-foreground">+{day.exercises.length - 4} más...</p>
                             )}
                           </div>
-                          <div className="mt-3 flex items-center gap-1.5 text-xs text-[#0E7490] opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="mt-3 flex items-center gap-1.5 text-xs text-brand opacity-0 group-hover:opacity-100 transition-opacity">
                             <Plus className="h-3 w-3" /> Registrar
                           </div>
                         </button>
@@ -884,9 +885,9 @@ export default function ClientDetail({ clientId }: Props) {
         {/* QUESTIONNAIRE TAB */}
       {activeTab === 'questionnaire' && <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-[#334155]">Cuestionario de seguimiento</h2>
+            <h2 className="text-lg font-medium text-ink">Cuestionario de seguimiento</h2>
             {(isAdmin || user?.role === 'client') && (
-              <Button className="bg-[#0E7490] hover:bg-[#0C5E74] text-white text-sm" onClick={() => setShowQuestionnaire(true)}>
+              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => setShowQuestionnaire(true)}>
                 <Plus className="h-4 w-4 mr-1.5" /> Nuevo cuestionario
               </Button>
             )}
@@ -908,7 +909,7 @@ export default function ClientDetail({ clientId }: Props) {
                     <div key={f.key} className="text-center p-2 rounded bg-muted/50">
                       <p className="text-lg">{f.icon}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">{f.label}</p>
-                      <p className="text-sm font-medium">{(latestQ as Record<string, unknown>)[f.key] as number || '—'}/10</p>
+                      <p className="text-sm font-medium">{(latestQ[f.key as keyof Questionnaire] as number | undefined) || '—'}/10</p>
                     </div>
                   ))}
                 </div>
@@ -926,7 +927,7 @@ export default function ClientDetail({ clientId }: Props) {
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="score" stroke="#334155" strokeWidth={2} dot={{ fill: '#334155' }} />
+                    <Line type="monotone" dataKey="score" stroke="var(--chart-1)" strokeWidth={2} dot={{ fill: 'var(--chart-1)' }} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -954,7 +955,7 @@ export default function ClientDetail({ clientId }: Props) {
 
         {/* PROGRESS TAB */}
       {activeTab === 'progress' && <div className="space-y-6 mt-6">
-          <h2 className="text-lg font-medium text-[#334155]">Progreso</h2>
+          <h2 className="text-lg font-medium text-ink">Progreso</h2>
           <div className="grid lg:grid-cols-2 gap-6">
             {weightData.length > 1 && (
               <Card className="border-0 shadow-sm">
@@ -966,7 +967,7 @@ export default function ClientDetail({ clientId }: Props) {
                       <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Line type="monotone" dataKey="peso" stroke="#334155" strokeWidth={2} dot={{ fill: '#334155' }} />
+                      <Line type="monotone" dataKey="peso" stroke="var(--chart-1)" strokeWidth={2} dot={{ fill: 'var(--chart-1)' }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -982,7 +983,7 @@ export default function ClientDetail({ clientId }: Props) {
                       <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey="volumen" fill="#334155" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="volumen" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -1013,7 +1014,7 @@ export default function ClientDetail({ clientId }: Props) {
               <div key={dayIdx} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium uppercase tracking-wider text-[#334155]">Día {day.dayNumber}</span>
+                    <span className="text-xs font-medium uppercase tracking-wider text-ink">Día {day.dayNumber}</span>
                     <Input value={day.dayName || ''} onChange={(e) => {
                       const days = [...trainingForm.days]
                       days[dayIdx] = {...days[dayIdx], dayName: e.target.value}
@@ -1045,7 +1046,7 @@ export default function ClientDetail({ clientId }: Props) {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowTrainingForm(false)}>Cancelar</Button>
-            <Button onClick={saveTraining} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">Guardar programa</Button>
+            <Button onClick={saveTraining} className="bg-brand hover:bg-brand-deep text-white">Guardar programa</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1075,9 +1076,9 @@ export default function ClientDetail({ clientId }: Props) {
               return (
                 <div key={exIdx} className="border rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-[#334155]">{ex.exerciseName || `Ejercicio ${exIdx + 1}`}</p>
+                    <p className="text-sm font-medium text-ink">{ex.exerciseName || `Ejercicio ${exIdx + 1}`}</p>
                     {prescribed && (
-                      <Badge variant="outline" className="text-[10px] shrink-0 border-[#0E7490]/30 text-[#0E7490]">
+                      <Badge variant="outline" className="text-[10px] shrink-0 border-brand/30 text-brand">
                         {prescribed.prescribedSets}×{prescribed.prescribedReps}
                         {prescribed.prescribedRir ? ` RIR ${prescribed.prescribedRir}` : ''}
                       </Badge>
@@ -1131,7 +1132,7 @@ export default function ClientDetail({ clientId }: Props) {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => { setShowSessionForm(false); setSessionPrescription(null); setSessionDayNumber(undefined) }}>Cancelar</Button>
-            <Button onClick={saveSession} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">
+            <Button onClick={saveSession} className="bg-brand hover:bg-brand-deep text-white">
               <Save className="h-4 w-4 mr-1.5" /> Guardar sesión
             </Button>
           </div>
@@ -1147,16 +1148,16 @@ export default function ClientDetail({ clientId }: Props) {
               <div key={f.key}>
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-sm">{f.icon} {f.label}</Label>
-                  <span className="text-sm font-medium text-[#334155]">{qForm[f.key] || 5}/10</span>
+                  <span className="text-sm font-medium text-ink">{qForm[f.key] || 5}/10</span>
                 </div>
-                <Slider value={[qForm[f.key] || 5]} min={1} max={10} step={1} onValueChange={([v]) => setQForm(prev => ({...prev, [f.key]: v}))} className="[&_[role=slider]]:bg-[#0E7490]" />
+                <Slider value={[qForm[f.key] || 5]} min={1} max={10} step={1} onValueChange={([v]) => setQForm(prev => ({...prev, [f.key]: v}))} className="[&_[role=slider]]:bg-brand" />
               </div>
             ))}
             <div><Label className="text-xs uppercase">Notas</Label><Textarea value={qNotes} onChange={(e) => setQNotes(e.target.value)} className="mt-1" rows={2} placeholder="Observaciones adicionales..." /></div>
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowQuestionnaire(false)}>Cancelar</Button>
-            <Button onClick={saveQuestionnaire} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">Enviar cuestionario</Button>
+            <Button onClick={saveQuestionnaire} className="bg-brand hover:bg-brand-deep text-white">Enviar cuestionario</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1173,7 +1174,7 @@ export default function ClientDetail({ clientId }: Props) {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowMeasurement(false)}>Cancelar</Button>
-            <Button onClick={saveMeasurement} className="bg-[#0E7490] hover:bg-[#0C5E74] text-white">Guardar</Button>
+            <Button onClick={saveMeasurement} className="bg-brand hover:bg-brand-deep text-white">Guardar</Button>
           </div>
         </DialogContent>
       </Dialog>

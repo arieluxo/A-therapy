@@ -69,7 +69,7 @@ export default function ClientDashboard() {
   }, [user?.clientId])
 
   if (loading) {
-    return <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#334155]" /></div>
+    return <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-ink" /></div>
   }
 
   if (!client) {
@@ -110,7 +110,7 @@ export default function ClientDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-light tracking-wider text-[#334155]">
+        <h1 className="text-2xl font-light tracking-wider text-ink">
           Hola, {client.name.split(' ')[0]}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Aquí tienes tu resumen de entrenamiento</p>
@@ -120,7 +120,7 @@ export default function ClientDashboard() {
       {activeTraining && (
         <button
           onClick={() => navigateTo('client-sessions')}
-          className="w-full bg-[#0E7490] hover:bg-[#0C5E74] text-white rounded-lg p-4 flex items-center justify-between transition-colors"
+          className="w-full bg-brand hover:bg-brand-deep text-white rounded-lg p-4 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -174,7 +174,7 @@ export default function ClientDashboard() {
                 <Dumbbell className="h-4 w-4" /> Mi entrenamiento
               </CardTitle>
               {activeTraining && (
-                <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => navigateTo('client-training')}>
+                <Button variant="ghost" size="sm" className="text-xs text-ink" onClick={() => navigateTo('client-training')}>
                   Ver todo <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               )}
@@ -185,12 +185,12 @@ export default function ClientDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium">{activeTraining.name || `M${activeTraining.mesocycle} - S${activeTraining.week}`}</p>
-                  <Badge className="text-[10px] bg-[#0E7490] hover:bg-[#0C5E74]">Activo</Badge>
+                  <Badge className="text-[10px] bg-brand hover:bg-brand-deep">Activo</Badge>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {activeTraining.days?.slice(0, 6).map((day, i) => (
                     <div key={i} className="border rounded-lg p-2.5">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-[#334155]">{day.dayName || `Día ${day.dayNumber}`}</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-ink">{day.dayName || `Día ${day.dayNumber}`}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">{day.exercises?.length || 0} ejercicios</p>
                     </div>
                   ))}
@@ -209,7 +209,7 @@ export default function ClientDashboard() {
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <ClipboardList className="h-4 w-4" /> Mi estado
               </CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => navigateTo('client-questionnaire')}>
+              <Button variant="ghost" size="sm" className="text-xs text-ink" onClick={() => navigateTo('client-questionnaire')}>
                 {latestQ ? 'Histórico' : 'Rellenar'} <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
@@ -252,7 +252,7 @@ export default function ClientDashboard() {
                 <Activity className="h-4 w-4" /> Última sesión
               </CardTitle>
               {client.sessions && client.sessions.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => navigateTo('client-sessions')}>
+                <Button variant="ghost" size="sm" className="text-xs text-ink" onClick={() => navigateTo('client-sessions')}>
                   Ver todas <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               )}
@@ -281,7 +281,7 @@ export default function ClientDashboard() {
                 </div>
                 {lastSession.totalVolume && lastSession.totalVolume > 0 && (
                   <div className="flex items-center gap-2 pt-2 border-t">
-                    <BarChart3 className="h-3.5 w-3.5 text-[#334155]" />
+                    <BarChart3 className="h-3.5 w-3.5 text-ink" />
                     <span className="text-xs text-muted-foreground">Volumen: <strong className="text-foreground">{lastSession.totalVolume.toLocaleString('es-ES')} kg</strong></span>
                   </div>
                 )}
@@ -300,7 +300,7 @@ export default function ClientDashboard() {
                 <TrendingUp className="h-4 w-4" /> Evolución de peso
               </CardTitle>
               {weightData.length > 3 && (
-                <Button variant="ghost" size="sm" className="text-xs text-[#334155]" onClick={() => navigateTo('client-progress')}>
+                <Button variant="ghost" size="sm" className="text-xs text-ink" onClick={() => navigateTo('client-progress')}>
                   Ver más <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               )}
@@ -314,7 +314,7 @@ export default function ClientDashboard() {
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} domain={['dataMin - 2', 'dataMax + 2']} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="peso" stroke="#334155" strokeWidth={2} dot={{ r: 3, fill: '#334155' }} />
+                  <Line type="monotone" dataKey="peso" stroke="var(--chart-1)" strokeWidth={2} dot={{ r: 3, fill: 'var(--chart-1)' }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -341,7 +341,7 @@ export default function ClientDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip />
-                <Bar dataKey="volumen" fill="#334155" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="volumen" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

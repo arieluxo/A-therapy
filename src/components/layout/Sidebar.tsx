@@ -4,6 +4,8 @@ import { useStore, View } from '@/store/useStore'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useTheme } from 'next-themes'
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +17,8 @@ import {
   Activity,
   TrendingUp,
   Dumbbell,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -34,8 +38,10 @@ const clientNavItems: { view: View; label: string; icon: React.ReactNode }[] = [
 
 function NavContent({ onClose }: { onClose?: () => void }) {
   const { user, view, setView, logout, selectClient } = useStore()
+  const { theme, setTheme } = useTheme()
   const isAdmin = user?.role === 'admin'
   const navItems = isAdmin ? adminNavItems : clientNavItems
+  const initials = (user?.name ?? '?').split(' ').map((w) => w.charAt(0)).slice(0, 2).join('').toUpperCase()
 
   const navigate = (v: View) => {
     if (!isAdmin) {
@@ -50,19 +56,19 @@ function NavContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-6 flex items-center gap-3">
-        <Image src="/logo.png" alt="A-THERAPY" width={36} height={36} className="rounded" />
+        <Image src="/logo.png" alt="A-THERAPY" width={36} height={36} className="rounded-lg ring-2 ring-brand-bright/60" />
         <div>
-          <h2 className="text-sm font-semibold tracking-[0.2em] text-[#334155]">A-THERAPY</h2>
+          <h2 className="text-sm font-semibold tracking-[0.2em] text-ink">A-THERAPY</h2>
           <p className="text-[10px] text-muted-foreground tracking-widest">TRAINING PLATFORM</p>
         </div>
       </div>
-      <Separator className="bg-[#0E7490]/10" />
+      <Separator className="bg-brand/10" />
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => (
           <Button
             key={item.view}
             variant={view === item.view ? 'secondary' : 'ghost'}
-            className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-[#0E7490]/10 text-[#334155] font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`w-full justify-start gap-3 h-10 text-sm ${view === item.view ? 'bg-brand/10 text-ink font-medium' : 'text-muted-foreground hover:text-foreground'}`}
             onClick={() => navigate(item.view)}
           >
             {item.icon}
@@ -70,11 +76,26 @@ function NavContent({ onClose }: { onClose?: () => void }) {
           </Button>
         ))}
       </nav>
-      <Separator className="bg-[#0E7490]/10" />
+      <Separator className="bg-brand/10" />
       <div className="p-3 space-y-1">
-        <div className="px-3 py-2 text-xs text-muted-foreground">
-          <p className="font-medium text-foreground truncate">{user?.name}</p>
-          <p className="truncate">{user?.email}</p>
+        <div className="px-3 py-2 flex items-center gap-3">
+          <Avatar className="h-9 w-9 shrink-0 bg-brand text-white">
+            <AvatarFallback className="bg-brand text-white text-xs font-medium">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="text-xs text-muted-foreground min-w-0 flex-1">
+            <p className="font-medium text-foreground truncate">{user?.name}</p>
+            <p className="truncate">{user?.email}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Cambiar entre modo claro y oscuro"
+            className="relative h-8 w-8 shrink-0"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          </Button>
         </div>
         <Button
           variant="ghost"
