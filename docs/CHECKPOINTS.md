@@ -3,6 +3,12 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP11 — 2026-09-27 — Guardado de entrenamientos
+- **Diagnóstico**: API OK en prod (crear con días+ejercicios → 201, editar →
+  200 con 2 días, borrar OK; datos de prueba eliminados). Fallo solo en UI.
+- **Fix**: validación + mensajes de error visibles en el diálogo.
+- **Commit**: pendiente (`fix: errores visibles al guardar entrenamientos`).
+
 ## CP9/CP10 — 2026-09-05 — Estética + tsc a cero
 - **Comprobado**: `tsc` 0 errores (antes 47) · `eslint` OK · `next build` OK
   (13 rutas) · exports `Avatar/AvatarFallback` verificados.

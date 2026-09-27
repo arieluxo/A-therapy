@@ -2,6 +2,14 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-27 — Fix guardado de entrenamientos (CP11)
+- Causa del reporte: el backend funciona (POST/PUT/DELETE verificados en
+  producción con días+ejercicios), pero el formulario fallaba en silencio
+  (`catch {}` vacío). El caso típico: guardar sin nombre → 400 sin mensaje.
+- `ClientDetail`: el nombre del programa es obligatorio con aviso; cualquier
+  error del servidor se muestra en el diálogo; el error se limpia al abrir.
+- Verificado: `eslint` + `tsc` (0) + `next build` OK.
+
 ## 2026-09-05 — Estética: tokens de marca + modo oscuro (CP9)
 - `globals.css`: tokens `--brand/--brand-deep/--brand-bright/--ink` (+ paleta
   `.dark` completa); body usa `bg-background`.

@@ -156,6 +156,7 @@ export default function ClientDetail({ clientId }: Props) {
 
   // Training state
   const [showTrainingForm, setShowTrainingForm] = useState(false)
+  const [trainingError, setTrainingError] = useState('')
   const [trainingForm, setTrainingForm] = useState<Training>({ id: '', name: '', isActive: true, days: [] })
   const [showSessionForm, setShowSessionForm] = useState(false)
   const [sessionForm, setSessionForm] = useState<Session>({ id: '', date: new Date().toISOString(), exercises: [] })
@@ -318,6 +319,11 @@ export default function ClientDetail({ clientId }: Props) {
 
   const saveTraining = async () => {
     try {
+      setTrainingError('')
+      if (!trainingForm.name.trim()) {
+        setTrainingError('Ponle un nombre al programa (p. ej. "Mesociclo 7 - Semana 1")')
+        return
+      }
       const body = {
         name: trainingForm.name,
         mesocycle: trainingForm.mesocycle || 1,
@@ -348,7 +354,18 @@ export default function ClientDetail({ clientId }: Props) {
       setShowTrainingForm(false)
       setTrainingForm({ id: '', name: '', isActive: true, days: [] })
       reloadClient()
-    } catch {}
+    } catch (e) {
+      let msg = 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { status?: number; error?: string }
+          if (parsed.error) msg = parsed.error
+        } catch {
+          /* mensaje genérico */
+        }
+      }
+      setTrainingError(msg)
+    }
   }
 
   const duplicateTraining = async (t: Training) => {
@@ -753,7 +770,7 @@ export default function ClientDetail({ clientId }: Props) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-lg font-medium text-ink">Programas de entrenamiento</h2>
             {isAdmin && (
-              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setShowTrainingForm(true) }}>
+              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setTrainingError(''); setShowTrainingForm(true) }}>
                 <Plus className="h-4 w-4 mr-1.5" /> Nuevo programa
               </Button>
             )}
@@ -774,7 +791,7 @@ export default function ClientDetail({ clientId }: Props) {
                       {isAdmin && (
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => duplicateTraining(t)}><Copy className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setTrainingForm(t); setShowTrainingForm(true) }}><Edit3 className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => { setTrainingForm(t); setTrainingError(''); setShowTrainingForm(true) }}><Edit3 className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteTraining(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
                       )}
@@ -1044,6 +1061,7 @@ export default function ClientDetail({ clientId }: Props) {
 
             <Button variant="outline" className="w-full border-dashed" onClick={addTrainingDay}><Plus className="h-4 w-4 mr-2" /> Añadir día de entrenamiento</Button>
           </div>
+          {trainingError && <p className="text-sm text-red-500">{trainingError}</p>}
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowTrainingForm(false)}>Cancelar</Button>
             <Button onClick={saveTraining} className="bg-brand hover:bg-brand-deep text-white">Guardar programa</Button>
