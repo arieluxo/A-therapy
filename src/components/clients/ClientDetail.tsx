@@ -159,6 +159,7 @@ export default function ClientDetail({ clientId }: Props) {
   const [trainingError, setTrainingError] = useState('')
   const [trainingForm, setTrainingForm] = useState<Training>({ id: '', name: '', isActive: true, days: [] })
   const [showSessionForm, setShowSessionForm] = useState(false)
+  const [sessionError, setSessionError] = useState('')
   const [sessionForm, setSessionForm] = useState<Session>({ id: '', date: new Date().toISOString(), exercises: [] })
   const [sessionDayNumber, setSessionDayNumber] = useState<number | undefined>(undefined)
   const [sessionPrescription, setSessionPrescription] = useState<TrainingDay | null>(null)
@@ -380,6 +381,26 @@ export default function ClientDetail({ clientId }: Props) {
       await apiDelete(`/api/trainings/${id}`)
       reloadClient()
     } catch {}
+  }
+
+  const deleteSession = async (id: string) => {
+    if (!confirm('¿Eliminar esta sesión registrada? Esta acción no se puede deshacer.')) return
+    try {
+      setSessionError('')
+      await apiDelete(`/api/sessions/${id}`)
+      reloadClient()
+    } catch (e) {
+      let msg = 'No se pudo eliminar la sesión.'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { error?: string }
+          if (parsed.error) msg = parsed.error
+        } catch {
+          /* mensaje genérico */
+        }
+      }
+      setSessionError(msg)
+    }
   }
 
   // Session helpers
@@ -892,8 +913,9 @@ export default function ClientDetail({ clientId }: Props) {
             <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">No hay sesiones registradas</CardContent></Card>
           ) : (
             <div className="space-y-3">
+              {sessionError && <p className="text-sm text-red-500">{sessionError}</p>}
               {client.sessions.map((s) => (
-                <SessionCard key={s.id} session={s} />
+                <SessionCard key={s.id} session={s} canDelete={isAdmin || user?.role === 'client'} onDelete={() => deleteSession(s.id)} />
               ))}
             </div>
           )}
@@ -1200,25 +1222,32 @@ export default function ClientDetail({ clientId }: Props) {
   )
 }
 
-function SessionCard({ session }: { session: Session }) {
+function SessionCard({ session, canDelete, onDelete }: { session: Session; canDelete?: boolean; onDelete?: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const date = new Date(session.date)
   return (
     <Card className="border-0 shadow-sm">
       <CardContent className="py-3 px-4">
-        <button className="w-full flex items-center justify-between text-left" onClick={() => setExpanded(!expanded)}>
-          <div className="flex items-center gap-3">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium">{date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-              <p className="text-xs text-muted-foreground">{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}{session.totalVolume ? ` · ${Math.round(session.totalVolume).toLocaleString()} kg vol.` : ''}{session.dayNumber ? ` · Día ${session.dayNumber}` : ''}</p>
+        <div className="w-full flex items-center justify-between text-left gap-2">
+          <button className="flex-1 flex items-center justify-between text-left min-w-0" onClick={() => setExpanded(!expanded)}>
+            <div className="flex items-center gap-3 min-w-0">
+              <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                <p className="text-xs text-muted-foreground">{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}{session.totalVolume ? ` · ${Math.round(session.totalVolume).toLocaleString()} kg vol.` : ''}{session.dayNumber ? ` · Día ${session.dayNumber}` : ''}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {session.rpe && <Badge variant="outline" className="text-[10px]">RPE {session.rpe}</Badge>}
-            {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-          </div>
-        </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {session.rpe && <Badge variant="outline" className="text-[10px]">RPE {session.rpe}</Badge>}
+              {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
+          </button>
+          {canDelete && (
+            <Button variant="ghost" size="icon" aria-label="Eliminar sesión" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-600 hover:bg-red-500/10" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         {expanded && (
           <div className="mt-3 space-y-3 border-t pt-3">
             {session.exercises.map((ex, i) => (

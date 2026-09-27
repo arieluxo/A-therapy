@@ -3,6 +3,12 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
+## CP12 — 2026-09-27 — Borrar sesiones
+- **Qué cambió**: botón eliminar en cada tarjeta de sesión + `deleteSession`.
+- **Comprobado**: lint/tsc/build OK · E2E Playwright (crear por API, borrar
+  por UI, verificado que desaparece).
+- **Commit**: pendiente (`feat: borrar sesiones registradas`).
+
 ## CP11 — 2026-09-27 — Guardado de entrenamientos
 - **Diagnóstico**: API OK en prod (crear con días+ejercicios → 201, editar →
   200 con 2 días, borrar OK; datos de prueba eliminados). Fallo solo en UI.

@@ -2,6 +2,14 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-27 — Borrar sesiones registradas (CP12)
+- La API `DELETE /api/sessions/[id]` ya existía (con control de propiedad);
+  faltaba el botón en la UI.
+- `SessionCard`: papelera por sesión (admin siempre, cliente en las suyas),
+  con `confirm()` y mensaje de error. Cabecera reestructurada para no anidar
+  botones. Tras borrar, recarga del cliente.
+- Verificado: `eslint` + `tsc` (0) + `next build` OK + E2E en navegador.
+
 ## 2026-09-27 — Fix guardado de entrenamientos (CP11)
 - Causa del reporte: el backend funciona (POST/PUT/DELETE verificados en
   producción con días+ejercicios), pero el formulario fallaba en silencio
