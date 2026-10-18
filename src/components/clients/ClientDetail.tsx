@@ -174,9 +174,12 @@ export default function ClientDetail({ clientId }: Props) {
   const [templates, setTemplates] = useState<Training[]>([])
   const [showTemplatePicker, setShowTemplatePicker] = useState(false)
   const [showTemplateForm, setShowTemplateForm] = useState(false)
+  const [showSaveAsTemplateDialog, setShowSaveAsTemplateDialog] = useState(false)
   const [templateError, setTemplateError] = useState('')
   const [templatePickerError, setTemplatePickerError] = useState('')
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
+  const [saveAsTemplateName, setSaveAsTemplateName] = useState('')
+  const [trainingToSaveAsTemplate, setTrainingToSaveAsTemplate] = useState<Training | null>(null)
 
   // Credential editing state (admin only)
   const [editCredentials, setEditCredentials] = useState(false)
@@ -424,6 +427,55 @@ export default function ClientDetail({ clientId }: Props) {
       setTemplates(templates.filter((t) => t.id !== id))
     } catch (e) {
       let msg = 'No se pudo eliminar la plantilla.'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { status?: number; error?: string }
+          if (parsed.error) msg = parsed.error
+        } catch {
+          /* mensaje genérico */
+        }
+      }
+      setTemplateError(msg)
+    }
+  }
+
+  const saveTrainingAsTemplate = async (training: Training) => {
+    if (!saveAsTemplateName.trim()) {
+      setTemplateError('Ponle un nombre a la plantilla')
+      return
+    }
+    try {
+      setTemplateError('')
+      setShowSaveAsTemplateDialog(false)
+      const body = {
+        name: saveAsTemplateName.trim(),
+        isTemplate: true,
+        days: training.days.map((d) => ({
+          dayNumber: d.dayNumber,
+          dayName: d.dayName,
+          exercises: d.exercises.map((e) => ({
+            exerciseName: e.exerciseName,
+            order: e.order,
+            prescribedSets: e.prescribedSets,
+            prescribedReps: e.prescribedReps,
+            prescribedRir: e.prescribedRir,
+            prescribedRpe: e.prescribedRpe,
+            prescribedRest: e.prescribedRest,
+            prescribedTempo: e.prescribedTempo,
+            prescribedWeight: e.prescribedWeight,
+            notes: e.notes,
+          })),
+        })),
+      }
+      await apiPost('/api/trainings', body)
+      setSaveAsTemplateName('')
+      setTrainingToSaveAsTemplate(null)
+      // Recargar lista de plantillas
+      apiGet('/api/trainings', { templates: 'true' }).then((data) => {
+        setTemplates(data?.trainings ?? [])
+      }).catch(() => setTemplates([]))
+    } catch (e) {
+      let msg = 'No se pudo guardar como plantilla.'
       if (e instanceof Error) {
         try {
           const parsed = JSON.parse(e.message) as { status?: number; error?: string }
@@ -888,6 +940,7 @@ export default function ClientDetail({ clientId }: Props) {
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => duplicateTraining(t)}><Copy className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="sm" onClick={() => { setTrainingForm(t); setTrainingError(''); setShowTrainingForm(true) }}><Edit3 className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => { setTrainingToSaveAsTemplate(t); setSaveAsTemplateName(t.name); setTemplateError(''); setShowSaveAsTemplateDialog(true) }}><Save className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteTraining(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
                       )}
@@ -1221,6 +1274,44 @@ export default function ClientDetail({ clientId }: Props) {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowTemplatePicker(false)}>Cancelar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save as Template Dialog */}
+      <Dialog open={showSaveAsTemplateDialog} onOpenChange={(open) => {
+        if (!open) {
+          setShowSaveAsTemplateDialog(false)
+          setSaveAsTemplateName('')
+          setTrainingToSaveAsTemplate(null)
+          setTemplateError('')
+        }
+      }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Guardar como plantilla</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            {templateError && <p className="text-sm text-red-500">{templateError}</p>}
+            <p className="text-xs text-muted-foreground">Introduce un nombre para identificar esta plantilla:</p>
+            <div>
+              <Label className="text-xs uppercase">Nombre de la plantilla</Label>
+              <Input
+                value={saveAsTemplateName}
+                onChange={(e) => setSaveAsTemplateName(e.target.value)}
+                className="mt-1"
+                placeholder="Ej: Fuerza parte superior"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Se copiarán los días, ejercicios, series, repeticiones, descansos y notas del entrenamiento actual.
+              No se guardarán datos del cliente.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={() => { setShowSaveAsTemplateDialog(false); setSaveAsTemplateName(''); setTrainingToSaveAsTemplate(null); setTemplateError('') }}>Cancelar</Button>
+            <Button onClick={() => trainingToSaveAsTemplate && saveTrainingAsTemplate(trainingToSaveAsTemplate)} disabled={!saveAsTemplateName.trim()} className="bg-brand hover:bg-brand-deep text-white">
+              Guardar plantilla
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
