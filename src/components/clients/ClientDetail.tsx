@@ -19,7 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   ArrowLeft, Plus, Trash2, Copy, Calendar, FileText, Activity,
   ClipboardList, Save, Loader2, ChevronDown, ChevronUp, BarChart3, Edit3,
-  KeyRound, Mail, ShieldCheck, ShieldX,
+  KeyRound, Mail, ShieldCheck, ShieldX, LayoutTemplate,
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -158,6 +158,7 @@ export default function ClientDetail({ clientId }: Props) {
   const [showTrainingForm, setShowTrainingForm] = useState(false)
   const [trainingError, setTrainingError] = useState('')
   const [trainingForm, setTrainingForm] = useState<Training>({ id: '', name: '', isActive: true, days: [] })
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
   const [showSessionForm, setShowSessionForm] = useState(false)
   const [sessionError, setSessionError] = useState('')
   const [sessionForm, setSessionForm] = useState<Session>({ id: '', date: new Date().toISOString(), exercises: [] })
@@ -168,6 +169,14 @@ export default function ClientDetail({ clientId }: Props) {
   const [qNotes, setQNotes] = useState('')
   const [showMeasurement, setShowMeasurement] = useState(false)
   const [measForm, setMeasForm] = useState<Record<string, string>>({})
+
+  // Templates state
+  const [templates, setTemplates] = useState<Training[]>([])
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false)
+  const [showTemplateForm, setShowTemplateForm] = useState(false)
+  const [templateError, setTemplateError] = useState('')
+  const [templatePickerError, setTemplatePickerError] = useState('')
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
 
   // Credential editing state (admin only)
   const [editCredentials, setEditCredentials] = useState(false)
@@ -197,8 +206,15 @@ export default function ClientDetail({ clientId }: Props) {
     }).catch(() => {}).finally(() => {
       if (!cancelled) setLoading(false)
     })
+    // Cargar plantillas globales (admin solo)
+    if (isAdmin) {
+      apiGet('/api/trainings', { templates: 'true' }).then((data) => {
+        if (cancelled) return
+        setTemplates(data?.trainings ?? [])
+      }).catch(() => setTemplates([]))
+    }
     return () => { cancelled = true }
-  }, [clientId])
+  }, [clientId, isAdmin])
 
   const reloadClient = () => {
     apiGet(`/api/clients/${clientId}`).then((data) => {
@@ -325,11 +341,10 @@ export default function ClientDetail({ clientId }: Props) {
         setTrainingError('Ponle un nombre al programa (p. ej. "Mesociclo 7 - Semana 1")')
         return
       }
-      const body = {
+      const body: any = {
         name: trainingForm.name,
         mesocycle: trainingForm.mesocycle || 1,
         week: trainingForm.week || 1,
-        clientId,
         days: trainingForm.days.map((d) => ({
           dayNumber: d.dayNumber,
           dayName: d.dayName,
@@ -347,6 +362,11 @@ export default function ClientDetail({ clientId }: Props) {
           })),
         })),
       }
+      if (isSavingTemplate) {
+        body.isTemplate = true
+      } else {
+        body.clientId = clientId
+      }
       if (trainingForm.id) {
         await apiPut(`/api/trainings/${trainingForm.id}`, body)
       } else {
@@ -354,6 +374,7 @@ export default function ClientDetail({ clientId }: Props) {
       }
       setShowTrainingForm(false)
       setTrainingForm({ id: '', name: '', isActive: true, days: [] })
+      setIsSavingTemplate(false)
       reloadClient()
     } catch (e) {
       let msg = 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'
@@ -365,7 +386,53 @@ export default function ClientDetail({ clientId }: Props) {
           /* mensaje genérico */
         }
       }
-      setTrainingError(msg)
+      if (isSavingTemplate) setTemplateError(msg)
+      else setTrainingError(msg)
+    }
+  }
+
+  const loadTemplate = async (templateId: string) => {
+    try {
+      setTemplatePickerError('')
+      const template = templates.find((t) => t.id === templateId)
+      await apiPost('/api/trainings', {
+        name: template ? template.name : 'Plantilla cargada',
+        clientId,
+        templateId,
+      })
+      setShowTemplatePicker(false)
+      reloadClient()
+    } catch (e) {
+      let msg = 'No se pudo cargar la plantilla.'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { status?: number; error?: string }
+          if (parsed.error) msg = parsed.error
+        } catch {
+          /* mensaje genérico */
+        }
+      }
+      setTemplatePickerError(msg)
+    }
+  }
+
+  const deleteTemplate = async (id: string) => {
+    if (!confirm('¿Eliminar esta plantilla? Esta acción no se puede deshacer.')) return
+    try {
+      setTemplateError('')
+      await apiDelete(`/api/trainings/${id}`)
+      setTemplates(templates.filter((t) => t.id !== id))
+    } catch (e) {
+      let msg = 'No se pudo eliminar la plantilla.'
+      if (e instanceof Error) {
+        try {
+          const parsed = JSON.parse(e.message) as { status?: number; error?: string }
+          if (parsed.error) msg = parsed.error
+        } catch {
+          /* mensaje genérico */
+        }
+      }
+      setTemplateError(msg)
     }
   }
 
@@ -791,9 +858,17 @@ export default function ClientDetail({ clientId }: Props) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-lg font-medium text-ink">Programas de entrenamiento</h2>
             {isAdmin && (
-              <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setTrainingError(''); setShowTrainingForm(true) }}>
-                <Plus className="h-4 w-4 mr-1.5" /> Nuevo programa
-              </Button>
+              <>
+                <Button className="bg-brand hover:bg-brand-deep text-white text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setTrainingError(''); setIsSavingTemplate(false); setShowTrainingForm(true) }}>
+                  <Plus className="h-4 w-4 mr-1.5" /> Nuevo programa
+                </Button>
+                <Button variant="outline" className="text-sm" onClick={() => { setTemplatePickerError(''); setShowTemplatePicker(true) }}>
+                  <Copy className="h-4 w-4 mr-1.5" /> Cargar plantilla
+                </Button>
+                <Button variant="outline" className="text-sm" onClick={() => { setTrainingForm({ id: '', name: '', isActive: true, days: [] }); setTrainingError(''); setIsSavingTemplate(true); setShowTrainingForm(true) }}>
+                  <LayoutTemplate className="h-4 w-4 mr-1.5" /> Nueva plantilla
+                </Button>
+              </>
             )}
           </div>
 
@@ -846,6 +921,35 @@ export default function ClientDetail({ clientId }: Props) {
                 </Card>
               ))}
             </div>
+          )}
+          {isAdmin && templates.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-md font-medium text-ink">Mis plantillas</h3>
+                <p className="text-xs text-muted-foreground">Plantillas reutilizables para cualquier cliente</p>
+              </div>
+              <div className="space-y-2">
+                {templates.map((t) => (
+                  <Card key={t.id} className="border-0 shadow-sm border-l-2 border-brand" style={{ borderLeftColor: 'var(--brand)' }}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{t.name}</p>
+                          <p className="text-xs text-muted-foreground">{t.days.length} día{t.days.length !== 1 ? 's' : ''} · {t.days.reduce((sum, d) => sum + d.exercises.length, 0)} ejercicio{t.days.reduce((sum, d) => sum + d.exercises.length, 0) !== 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => { setTrainingForm({ ...t, id: t.id, days: t.days.map(d => ({ ...d, exercises: d.exercises.map(e => ({ ...e })) })) }); setTrainingError(''); setIsSavingTemplate(true); setEditingTemplateId(t.id); setShowTrainingForm(true) }}><Edit3 className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteTemplate(t.id)}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          {isAdmin && templates.length === 0 && (
+            <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">No hay plantillas guardadas. Crea una con "Nueva plantilla".</CardContent></Card>
           )}
       </div>}
 
@@ -1039,10 +1143,10 @@ export default function ClientDetail({ clientId }: Props) {
       {/* Training Editor Dialog */}
       <Dialog open={showTrainingForm} onOpenChange={setShowTrainingForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Programa de entrenamiento</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">{isSavingTemplate ? 'Nueva plantilla de entrenamiento' : 'Programa de entrenamiento'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2"><Label className="text-xs uppercase">Nombre</Label><Input value={trainingForm.name} onChange={(e) => setTrainingForm(f => ({...f, name: e.target.value}))} className="mt-1" placeholder="Ej: Mesociclo 7 - Semana 1" /></div>
+              <div className="col-span-2"><Label className="text-xs uppercase">Nombre</Label><Input value={trainingForm.name} onChange={(e) => setTrainingForm(f => ({...f, name: e.target.value}))} className="mt-1" placeholder={isSavingTemplate ? 'Ej: Press de banca - Push' : 'Ej: Mesociclo 7 - Semana 1'} /></div>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label className="text-xs uppercase">Meso</Label><Input type="number" value={trainingForm.mesocycle || ''} onChange={(e) => setTrainingForm(f => ({...f, mesocycle: parseInt(e.target.value) || undefined}))} className="mt-1" /></div>
                 <div><Label className="text-xs uppercase">Semana</Label><Input type="number" value={trainingForm.week || ''} onChange={(e) => setTrainingForm(f => ({...f, week: parseInt(e.target.value) || undefined}))} className="mt-1" /></div>
@@ -1083,10 +1187,40 @@ export default function ClientDetail({ clientId }: Props) {
 
             <Button variant="outline" className="w-full border-dashed" onClick={addTrainingDay}><Plus className="h-4 w-4 mr-2" /> Añadir día de entrenamiento</Button>
           </div>
-          {trainingError && <p className="text-sm text-red-500">{trainingError}</p>}
+          {(isSavingTemplate ? templateError : trainingError) && <p className="text-sm text-red-500">{isSavingTemplate ? templateError : trainingError}</p>}
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowTrainingForm(false)}>Cancelar</Button>
-            <Button onClick={saveTraining} className="bg-brand hover:bg-brand-deep text-white">Guardar programa</Button>
+            <Button onClick={saveTraining} className="bg-brand hover:bg-brand-deep text-white">{isSavingTemplate ? 'Guardar plantilla' : 'Guardar programa'}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Picker Dialog */}
+      <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="text-lg font-light tracking-wider">Cargar plantilla</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            {templatePickerError && <p className="text-sm text-red-500">{templatePickerError}</p>}
+            <p className="text-xs text-muted-foreground mb-2">Selecciona una plantilla para cargar en este cliente:</p>
+            <div className="space-y-2">
+              {templates.map((t) => (
+                <Card key={t.id} className="border-0 shadow-sm hover:border-brand/50 transition-border cursor-pointer group" onClick={() => loadTemplate(t.id)}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-ink">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.days.length} día{t.days.length !== 1 ? 's' : ''} · {t.days.reduce((sum, d) => sum + d.exercises.length, 0)} ejercicio{t.days.reduce((sum, d) => sum + d.exercises.length, 0) !== 1 ? 's' : ''}</p>
+                      </div>
+                      <Copy className="h-4 w-4 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {templates.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No hay plantillas disponibles.</p>}
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={() => setShowTemplatePicker(false)}>Cancelar</Button>
           </div>
         </DialogContent>
       </Dialog>

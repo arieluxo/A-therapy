@@ -91,7 +91,8 @@ model Exercise {
 
 model Training {
   id          String   @id @default(cuid())
-  clientId    String
+  clientId    String?
+  isTemplate  Boolean  @default(false)
   name        String
   mesocycle   Int?
   week        Int?
@@ -100,7 +101,7 @@ model Training {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   days        TrainingDay[]
   sessions    Session[]
 }

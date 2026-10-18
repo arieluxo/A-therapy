@@ -2,6 +2,17 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-27 — Plantillas de entrenamiento reutilizables (CP13)
+- Schema: `Training.clientId` pasa a opcional; se añade `Training.isTemplate` (@default false).
+  Las plantillas son entrenamientos con `clientId: null` y `isTemplate: true` — cero modelos nuevos.
+- API `GET /api/trainings?templates=true`: lista plantillas (admin). `POST /api/trainings` acepta
+  `isTemplate: true` (sin clientId) y `templateId` (clona días+ejercicios de una plantilla en un cliente).
+- UI (ClientDetail, tab Entrenamiento): botones "Cargar plantilla" y "Nueva plantilla" junto a
+  "Nuevo programa"; sección "Mis plantillas" con editar/eliminar; diálogo reutilizado para crear/editar
+  plantillas; cargar plantilla crea un entrenamiento independiente para el cliente (sin vínculo a la plantilla).
+- Verificado: tsc 0, eslint 0, next build OK, E2E Playwright (crear plantilla → cargar en cliente → editar
+  sin afectar plantilla original).
+
 ## 2026-09-27 — Borrar sesiones registradas (CP12)
 - La API `DELETE /api/sessions/[id]` ya existía (con control de propiedad);
   faltaba el botón en la UI.

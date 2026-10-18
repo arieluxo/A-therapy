@@ -3,11 +3,15 @@
 Cada cambio importante deja un checkpoint: qué cambió, qué funciona,
 qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 
-## CP12 — 2026-09-27 — Borrar sesiones
+## CP13 — 2026-09-27 — Plantillas de entrenamiento reutilizables
+- **Qué cambió**: clientId opcional + isTemplate en Training; API templates; UI cargar/crear plantillas.
+- **Comprobado**: tsc 0 · eslint 0 · build OK · E2E Playwright PASS (crear→cargar→editar sin afectar plantilla).
+- **Commit**: pendiente (`feat: plantillas de entrenamiento reutilizables (CP13)`).
+
+## CP12 — 2026-09-27 — Borrar sesiones registradas
 - **Qué cambió**: botón eliminar en cada tarjeta de sesión + `deleteSession`.
-- **Comprobado**: lint/tsc/build OK · E2E Playwright (crear por API, borrar
-  por UI, verificado que desaparece).
-- **Commit**: pendiente (`feat: borrar sesiones registradas`).
+- **Comprobado**: lint/tsc/build OK · E2E Playwright (crear por API, borrar por UI, verificado que desaparece).
+- **Commit**: `542be01 feat: borrar sesiones registradas (CP12)` (pusheado).
 
 ## CP11 — 2026-09-27 — Guardado de entrenamientos
 - **Diagnóstico**: API OK en prod (crear con días+ejercicios → 201, editar →
