@@ -6,7 +6,12 @@ qué se comprobó, qué queda pendiente, commit asociado y próximo paso.
 ## CP13 — 2026-09-27 — Plantillas de entrenamiento reutilizables
 - **Qué cambió**: clientId opcional + isTemplate en Training; API templates; UI cargar/crear plantillas.
 - **Comprobado**: tsc 0 · eslint 0 · build OK · E2E Playwright PASS (crear→cargar→editar sin afectar plantilla).
-- **Commit**: pendiente (`feat: plantillas de entrenamiento reutilizables (CP13)`).
+- **Commit**: `32b566d feat: plantillas de entrenamiento reutilizables (CP13)` (pusheado).
+
+## CP14 — 2026-09-27 — Guardar entrenamiento como plantilla
+- **Qué cambió**: botón «Guardar como plantilla» en tarjetas de entrenamiento + diálogo nombre + saveTrainingAsTemplate.
+- **Comprobado**: tsc 0 · eslint 0 · build OK · API tests PASS (guardar→cargar→editar sin afectar plantilla; clientes 403 en todas las rutas).
+- **Commit**: `6f1d289 feat: guardar entrenamiento como plantilla (Guardar como plantilla)` (pusheado).
 
 ## CP12 — 2026-09-27 — Borrar sesiones registradas
 - **Qué cambió**: botón eliminar en cada tarjeta de sesión + `deleteSession`.

@@ -2,6 +2,14 @@
 
 Formato: `[fecha] — título` + descripción breve. Entradas nuevas arriba.
 
+## 2026-09-27 — Guardar entrenamiento como plantilla (CP14)
+- Botón «Guardar como plantilla» (icono Save) en cada tarjeta de entrenamiento del cliente, solo admin.
+- Diálogo para introducir nombre personalizado de la plantilla; guarda copia de días, ejercicios, series, reps, descansos, RIR, tempo, peso y notas.
+- No copia datos del cliente (nombre, perfil, etc.) — solo datos del entrenamiento.
+- `saveTrainingAsTemplate()` llama a POST /api/trainings con `isTemplate: true` y `clientId: null`.
+- Backend y frontend protegen todas las rutas con `role === 'admin'` (403 para clientes).
+- Verificado vía API: guardar plantilla → cargar en otro cliente → editar copia sin afectar plantilla original ni cliente fuente.
+
 ## 2026-09-27 — Plantillas de entrenamiento reutilizables (CP13)
 - Schema: `Training.clientId` pasa a opcional; se añade `Training.isTemplate` (@default false).
   Las plantillas son entrenamientos con `clientId: null` y `isTemplate: true` — cero modelos nuevos.
